@@ -63,6 +63,7 @@ func TestImageBuilderConfs(t *testing.T) {
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base", "image1"})
 				}
+				assert.Equal(t, ib.GetLeafImages(), []string{"image2"})
 			},
 		},
 	}

@@ -23,8 +23,9 @@ type ImageConf struct {
 
 // ImageBuilder can be used to build images
 type ImageBuilder struct {
-	confs    map[string]*ImageConf
-	imageDir string
+	imageDir   string
+	confs      map[string]*ImageConf
+	leafImages []string
 }
 
 type ImageBuilderConf struct {
@@ -56,6 +57,18 @@ func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
 		}
 	}
 
+	nochildren := make(map[string]struct{}, len(imgConfs))
+	for _, img := range imgConfs {
+		nochildren[img.Name] = struct{}{}
+	}
+	for _, img := range imgConfs {
+		delete(nochildren, img.Parent)
+	}
+	leafImages := make([]string, 0, len(nochildren))
+	for c := range nochildren {
+		leafImages = append(leafImages, c)
+	}
+
 	err := os.MkdirAll(conf.ImageDir, 0755)
 	if err != nil && !os.IsExist(err) {
 		return nil, err
@@ -71,8 +84,9 @@ func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
 	}
 
 	return &ImageBuilder{
-		confs:    imgConfs,
-		imageDir: conf.ImageDir,
+		imageDir:   conf.ImageDir,
+		confs:      imgConfs,
+		leafImages: leafImages,
 	}, nil
 }
 
@@ -97,4 +111,13 @@ func (ib *ImageBuilder) getDependencies(image string) ([]string, error) {
 		ret[i], ret[j] = ret[j], ret[i]
 	}
 	return ret, nil
+}
+
+func (ib *ImageBuilder) GetLeafImages() []string {
+	ret := make([]string, len(ib.leafImages))
+	for i := range ib.leafImages {
+		ret[i] = ib.leafImages[i]
+	}
+
+	return ret
 }
