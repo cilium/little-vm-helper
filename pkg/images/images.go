@@ -7,12 +7,6 @@ import (
 	"path"
 )
 
-var (
-	ConfFile = "conf.json"
-)
-
-// code for creating images
-
 // ImageConf describes the configuration of an image
 type ImageConf struct {
 	Name     string
@@ -23,9 +17,9 @@ type ImageConf struct {
 
 // ImageBuilder can be used to build images
 type ImageBuilder struct {
-	imageDir   string
-	confs      map[string]*ImageConf
-	leafImages []string
+	imageDir string
+	confs    map[string]*ImageConf
+	children map[string][]string
 }
 
 type ImageBuilderConf struct {
@@ -51,22 +45,12 @@ func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
 		}
 	}
 
-	for _, parent := range imageParent {
+	children := make(map[string][]string)
+	for child, parent := range imageParent {
 		if _, ok := imgConfs[parent]; !ok {
 			return nil, fmt.Errorf("image '%s' specified as parent, but it is not defined", parent)
 		}
-	}
-
-	nochildren := make(map[string]struct{}, len(imgConfs))
-	for _, img := range imgConfs {
-		nochildren[img.Name] = struct{}{}
-	}
-	for _, img := range imgConfs {
-		delete(nochildren, img.Parent)
-	}
-	leafImages := make([]string, 0, len(nochildren))
-	for c := range nochildren {
-		leafImages = append(leafImages, c)
+		children[parent] = append(children[parent], child)
 	}
 
 	err := os.MkdirAll(conf.ImageDir, 0755)
@@ -84,10 +68,22 @@ func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
 	}
 
 	return &ImageBuilder{
-		imageDir:   conf.ImageDir,
-		confs:      imgConfs,
-		leafImages: leafImages,
+		imageDir: conf.ImageDir,
+		confs:    imgConfs,
+		children: children,
 	}, nil
+}
+
+func (ib *ImageBuilder) ImageFilename(image string) (string, error) {
+	if _, ok := ib.confs[image]; !ok {
+		return "", fmt.Errorf("no configuration for image '%s'", image)
+	}
+
+	return ib.imageFilename(image), nil
+}
+
+func (ib *ImageBuilder) imageFilename(image string) string {
+	return path.Join(ib.imageDir, fmt.Sprintf("%s.%s", image, ImageExt))
 }
 
 // getDependencies returns the dependencies of an image
@@ -113,10 +109,27 @@ func (ib *ImageBuilder) getDependencies(image string) ([]string, error) {
 	return ret, nil
 }
 
-func (ib *ImageBuilder) GetLeafImages() []string {
-	ret := make([]string, len(ib.leafImages))
-	for i := range ib.leafImages {
-		ret[i] = ib.leafImages[i]
+func (ib *ImageBuilder) IsLeafImage(i string) bool {
+	_, hasChidren := ib.children[i]
+	return !hasChidren
+}
+
+func (ib *ImageBuilder) LeafImages() []string {
+	ret := make([]string, 0)
+	for i, _ := range ib.confs {
+		if ib.IsLeafImage(i) {
+			ret = append(ret, i)
+		}
+	}
+	return ret
+}
+
+func (ib *ImageBuilder) RootImages() []string {
+	ret := make([]string, 0)
+	for i, cnf := range ib.confs {
+		if cnf.Parent == "" {
+			ret = append(ret, i)
+		}
 	}
 
 	return ret

@@ -63,7 +63,8 @@ func TestImageBuilderConfs(t *testing.T) {
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base", "image1"})
 				}
-				assert.Equal(t, ib.GetLeafImages(), []string{"image2"})
+				assert.Equal(t, ib.LeafImages(), []string{"image2"})
+				assert.Equal(t, ib.RootImages(), []string{"base"})
 			},
 		},
 	}
@@ -71,7 +72,8 @@ func TestImageBuilderConfs(t *testing.T) {
 	for i := range tests {
 		// NB: anonymous function so that os.RemoveAll() is called in all iterations
 		func() {
-			dir, err := ioutil.TempDir("", "images_test")
+			dir, err := ioutil.TempDir("", "test_images")
+			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 			test := &tests[i]
 			conf := &ImageBuilderConf{
