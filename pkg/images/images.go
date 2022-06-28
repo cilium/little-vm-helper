@@ -18,7 +18,7 @@ type ImageConf struct {
 	Name     string
 	Parent   string
 	Packages []string
-	// TODO: add actions
+	Actions  []Action
 }
 
 // ImageBuilder can be used to build images
