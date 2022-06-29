@@ -38,7 +38,7 @@ func TestImageBuilds(t *testing.T) {
 				assert.Equal(t, 1, len(r.ImageResults))
 				assert.False(t, r.ImageResults["base"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["base"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt)))
 			},
 		}, {
 			confs: []ImageConf{
@@ -52,7 +52,7 @@ func TestImageBuilds(t *testing.T) {
 				for _, fname := range []string{"base", "image1", "image2"} {
 					assert.False(t, r.ImageResults[fname].CachedImageUsed)
 					assert.Equal(t, "", r.ImageResults[fname].CachedImageDeleted)
-					assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", fname, ImageExt)))
+					assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", fname, DefaultImageExt)))
 				}
 			},
 		}, {
@@ -62,7 +62,7 @@ func TestImageBuilds(t *testing.T) {
 				ImageConf{Name: "image2", Parent: "image1"},
 			},
 			prepare: func(dir string) {
-				fname := path.Join(dir, fmt.Sprintf("%s.%s", "base", ImageExt))
+				fname := path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt))
 				f, err := os.Create(fname)
 				assert.Nil(t, err)
 				defer f.Close()
@@ -73,15 +73,15 @@ func TestImageBuilds(t *testing.T) {
 
 				assert.True(t, r.ImageResults["base"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["base"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt)))
 
 				assert.False(t, r.ImageResults["image1"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["image1"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image1", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image1", DefaultImageExt)))
 
 				assert.False(t, r.ImageResults["image2"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["image2"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", DefaultImageExt)))
 			},
 		}, {
 			confs: []ImageConf{
@@ -90,7 +90,7 @@ func TestImageBuilds(t *testing.T) {
 				ImageConf{Name: "image2", Parent: "image1"},
 			},
 			prepare: func(dir string) {
-				fname := path.Join(dir, fmt.Sprintf("%s.%s", "image1", ImageExt))
+				fname := path.Join(dir, fmt.Sprintf("%s.%s", "image1", DefaultImageExt))
 				f, err := os.Create(fname)
 				assert.Nil(t, err)
 				defer f.Close()
@@ -101,15 +101,15 @@ func TestImageBuilds(t *testing.T) {
 
 				assert.False(t, r.ImageResults["base"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["base"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt)))
 
 				assert.False(t, r.ImageResults["image1"].CachedImageUsed)
 				assert.NotEqual(t, "", r.ImageResults["image1"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image1", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image1", DefaultImageExt)))
 
 				assert.False(t, r.ImageResults["image2"].CachedImageUsed)
 				assert.Equal(t, "", r.ImageResults["image2"].CachedImageDeleted)
-				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", ImageExt)))
+				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", DefaultImageExt)))
 			},
 		},
 	}
@@ -129,7 +129,7 @@ func TestImageBuilds(t *testing.T) {
 			if test.prepare != nil {
 				test.prepare(dir)
 			}
-			conf := &ImageBuilderConf{
+			conf := &BuilderConf{
 				ImageDir: dir,
 				Images:   test.confs,
 			}

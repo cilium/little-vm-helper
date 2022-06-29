@@ -1,7 +1,21 @@
 package images
 
 var (
-	Debootstrap = "debootstrap"
-	ConfFile    = "conf.json"
-	ImageExt    = "qcow2"
+	// Binaries used
+	// Debootstrap = "debootstrap"
+	Mmdebstrap    = "mmdebstrap"
+	QemuImg       = "qemu-img"
+	VirtCustomize = "virt-customize"
+	GuestFish     = "guestfish"
+
+	Binaries = []string{
+		Mmdebstrap,
+		QemuImg,
+		VirtCustomize,
+		GuestFish,
+	}
+
+	DefaultConfFile  = "conf.json"
+	DefaultImageExt  = "img"
+	DefaultImageSize = "8G"
 )

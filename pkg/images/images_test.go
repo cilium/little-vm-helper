@@ -13,14 +13,14 @@ import (
 func TestImageBuilderConfs(t *testing.T) {
 	tests := []struct {
 		confs []ImageConf
-		test  func(*ImageBuilder, error)
+		test  func(*Builder, error)
 	}{
 		{
 			confs: []ImageConf{
 				ImageConf{Name: "base"},
 				ImageConf{Name: "base"},
 			},
-			test: func(ib *ImageBuilder, err error) {
+			test: func(ib *Builder, err error) {
 				assert.Nil(t, ib)
 				assert.Error(t, err)
 			},
@@ -29,7 +29,7 @@ func TestImageBuilderConfs(t *testing.T) {
 			confs: []ImageConf{
 				ImageConf{Name: "base"},
 			},
-			test: func(ib *ImageBuilder, err error) {
+			test: func(ib *Builder, err error) {
 				assert.NotNil(t, ib)
 				assert.Nil(t, err)
 			},
@@ -39,7 +39,7 @@ func TestImageBuilderConfs(t *testing.T) {
 			confs: []ImageConf{
 				ImageConf{Name: "image1", Parent: "base"},
 			},
-			test: func(ib *ImageBuilder, err error) {
+			test: func(ib *Builder, err error) {
 				assert.Nil(t, ib)
 				assert.NotNil(t, err)
 			},
@@ -50,7 +50,7 @@ func TestImageBuilderConfs(t *testing.T) {
 				ImageConf{Name: "image1", Parent: "base"},
 				ImageConf{Name: "image2", Parent: "image1"},
 			},
-			test: func(ib *ImageBuilder, err error) {
+			test: func(ib *Builder, err error) {
 				assert.NotNil(t, ib)
 				assert.Nil(t, err)
 				{
@@ -76,20 +76,21 @@ func TestImageBuilderConfs(t *testing.T) {
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 			test := &tests[i]
-			conf := &ImageBuilderConf{
-				ImageDir: dir,
-				Images:   test.confs,
+			conf := &BuilderConf{
+				ImageDir:     dir,
+				Images:       test.confs,
+				saveConfFile: true,
 			}
 			ib, err := NewImageBuilder(conf)
 			test.test(ib, err)
 			// if no errors, verify that conf.json matches the configuration
 			if err == nil {
-				data, err := os.ReadFile(path.Join(dir, ConfFile))
+				data, err := os.ReadFile(path.Join(dir, DefaultConfFile))
 				assert.Nil(t, err)
-				var fcnf ImageBuilderConf
+				var fcnf BuilderConf
 				err = json.Unmarshal(data, &fcnf)
 				assert.Nil(t, err)
-				assert.Equal(t, conf, &fcnf)
+				assert.Equal(t, &conf.Images, &fcnf.Images)
 			}
 		}()
 	}

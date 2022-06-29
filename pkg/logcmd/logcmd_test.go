@@ -36,5 +36,5 @@ func TestLogcmd(t *testing.T) {
 	err := runAndLogCommand(cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"stderr> FOO\n"}, warnRecorder.Messages)
-	assert.Equal(t, []string{"stdout> LALA\n"}, infoRecorder.Messages)
+	assert.Equal(t, []string{"starting command", "stdout> LALA\n"}, infoRecorder.Messages)
 }

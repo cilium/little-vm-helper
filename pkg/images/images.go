@@ -16,19 +16,21 @@ type ImageConf struct {
 }
 
 // ImageBuilder can be used to build images
-type ImageBuilder struct {
+type Builder struct {
 	imageDir string
 	confs    map[string]*ImageConf
 	children map[string][]string
 }
 
-type ImageBuilderConf struct {
+type BuilderConf struct {
 	ImageDir string
 	Images   []ImageConf
+
+	saveConfFile bool
 }
 
 // NewImageBuilder creates a new image builder
-func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
+func NewImageBuilder(conf *BuilderConf) (*Builder, error) {
 	// image name -> ImageConf
 	imgConfs := make(map[string]*ImageConf, len(conf.Images))
 	// name -> parent name (if parent exists)
@@ -58,36 +60,38 @@ func NewImageBuilder(conf *ImageBuilderConf) (*ImageBuilder, error) {
 		return nil, err
 	}
 
-	confb, err := json.Marshal(conf)
-	if err != nil {
-		return nil, err
-	}
-	err = os.WriteFile(path.Join(conf.ImageDir, ConfFile), confb, 0666)
-	if err != nil {
-		return nil, fmt.Errorf("error writing configuration: %w", err)
+	if conf.saveConfFile {
+		confb, err := json.Marshal(conf)
+		if err != nil {
+			return nil, err
+		}
+		err = os.WriteFile(path.Join(conf.ImageDir, DefaultConfFile), confb, 0666)
+		if err != nil {
+			return nil, fmt.Errorf("error writing configuration: %w", err)
+		}
 	}
 
-	return &ImageBuilder{
+	return &Builder{
 		imageDir: conf.ImageDir,
 		confs:    imgConfs,
 		children: children,
 	}, nil
 }
 
-func (ib *ImageBuilder) ImageFilename(image string) (string, error) {
+func (ib *Builder) ImageFilenamePrefix(image string) (string, error) {
 	if _, ok := ib.confs[image]; !ok {
 		return "", fmt.Errorf("no configuration for image '%s'", image)
 	}
 
-	return ib.imageFilename(image), nil
+	return ib.imageFilenamePrefix(image), nil
 }
 
-func (ib *ImageBuilder) imageFilename(image string) string {
-	return path.Join(ib.imageDir, fmt.Sprintf("%s.%s", image, ImageExt))
+func (ib *Builder) imageFilenamePrefix(image string) string {
+	return path.Join(ib.imageDir, image)
 }
 
 // getDependencies returns the dependencies of an image
-func (ib *ImageBuilder) getDependencies(image string) ([]string, error) {
+func (ib *Builder) getDependencies(image string) ([]string, error) {
 	var ret []string
 	cnf, ok := ib.confs[image]
 	if !ok {
@@ -109,12 +113,12 @@ func (ib *ImageBuilder) getDependencies(image string) ([]string, error) {
 	return ret, nil
 }
 
-func (ib *ImageBuilder) IsLeafImage(i string) bool {
+func (ib *Builder) IsLeafImage(i string) bool {
 	_, hasChidren := ib.children[i]
 	return !hasChidren
 }
 
-func (ib *ImageBuilder) LeafImages() []string {
+func (ib *Builder) LeafImages() []string {
 	ret := make([]string, 0)
 	for i, _ := range ib.confs {
 		if ib.IsLeafImage(i) {
@@ -124,7 +128,7 @@ func (ib *ImageBuilder) LeafImages() []string {
 	return ret
 }
 
-func (ib *ImageBuilder) RootImages() []string {
+func (ib *Builder) RootImages() []string {
 	ret := make([]string, 0)
 	for i, cnf := range ib.confs {
 		if cnf.Parent == "" {

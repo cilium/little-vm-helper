@@ -45,6 +45,7 @@ func runAndLogCommand(
 	defer stdout.Close()
 
 	// start command
+	log.WithField("path", cmd.Path).WithField("args", cmd.Args).Info("starting command")
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to execute command: %w", err)
 	}
@@ -81,5 +82,5 @@ func RunAndLogCommand(
 	cmd *exec.Cmd,
 	log *logrus.Logger,
 ) error {
-	return runAndLogCommand(cmd, log, logrus.WarnLevel, logrus.InfoLevel)
+	return runAndLogCommand(cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 }

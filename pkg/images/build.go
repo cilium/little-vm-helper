@@ -1,6 +1,7 @@
 package images
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +11,7 @@ import (
 )
 
 // BuildImageResult describes the result of building a single image
-type BuildImageResult struct {
+type BuildResult struct {
 	// Error is not nil, if building the image failed.
 	Error error
 
@@ -28,7 +29,7 @@ type BuilderResult struct {
 	// Error is not nil if an error happened outside of buiding an image
 	Error error
 	// ImageResults results of building images
-	ImageResults map[string]BuildImageResult
+	ImageResults map[string]BuildResult
 }
 
 // Err() returns a summary error or nil if no errors were encountered
@@ -66,22 +67,22 @@ type BuildConf struct {
 }
 
 type buildState struct {
-	ib        *ImageBuilder
+	ib        *Builder
 	bldConf   *BuildConf
 	bldResult BuilderResult
 }
 
-func newBuildState(ib *ImageBuilder, cnf *BuildConf) *buildState {
+func newBuildState(ib *Builder, cnf *BuildConf) *buildState {
 	return &buildState{
 		ib:      ib,
 		bldConf: cnf,
 		bldResult: BuilderResult{
-			ImageResults: make(map[string]BuildImageResult),
+			ImageResults: make(map[string]BuildResult),
 		},
 	}
 }
 
-func (ib *ImageBuilder) BuildAllImages(bldConf *BuildConf) *BuilderResult {
+func (ib *Builder) BuildAllImages(bldConf *BuildConf) *BuilderResult {
 
 	log := bldConf.Log
 	st := newBuildState(ib, bldConf)
@@ -122,31 +123,32 @@ func (ib *ImageBuilder) BuildAllImages(bldConf *BuildConf) *BuilderResult {
 	return &st.bldResult
 }
 
-func (b *buildState) buildImage(image string) BuildImageResult {
+func (b *buildState) buildImage(image string) BuildResult {
 	res := b.doBuildImage(image)
 	b.bldResult.ImageResults[image] = res
 	return res
 }
 
-func (b *buildState) doBuildImage(image string) BuildImageResult {
-	var imgRes BuildImageResult
+func (b *buildState) doBuildImage(image string) BuildResult {
+	var imgRes BuildResult
 
-	imageFname, err := b.ib.ImageFilename(image)
+	imageFnamePrefix, err := b.ib.ImageFilenamePrefix(image)
 	if err != nil {
 		imgRes.Error = err
 		return imgRes
 	}
+	imageFname := fmt.Sprintf("%s.%s", imageFnamePrefix, DefaultImageExt)
 
 	if fi, err := os.Stat(imageFname); err == nil {
 		mode := fi.Mode()
 		if !mode.IsRegular() {
-			imgRes.Error = fmt.Errorf("%s is not a regular file. Bailing out.", imageFname)
+			imgRes.Error = fmt.Errorf("'%s' is not a regular file. Bailing out.", imageFname)
 			return imgRes
 		}
 
 		if !b.bldConf.DryRun && fi.Size() == 0 {
 			os.Remove(imageFname)
-			imgRes.CachedImageDeleted = fmt.Sprintf("image %s was an empty file, and this was not a dry run", imageFname)
+			imgRes.CachedImageDeleted = fmt.Sprintf("image '%s' was an empty file, and this was not a dry run", imageFname)
 		} else if parent := b.ib.confs[image].Parent; parent != "" && !b.bldResult.ImageResults[parent].CachedImageUsed {
 			os.Remove(imageFname)
 			imgRes.CachedImageDeleted = fmt.Sprintf("image '%s' existed, but parent '%s' did not use the cache", imageFname, parent)
@@ -157,7 +159,9 @@ func (b *buildState) doBuildImage(image string) BuildImageResult {
 		}
 	}
 
-	buildImage := b.ib.doBuildImage
+	buildImage := func(image string) error {
+		return b.ib.doBuildImage(context.Background(), b.bldConf.Log, image)
+	}
 	if b.bldConf.DryRun {
 		buildImage = b.ib.doBuildImageDryRun
 	}

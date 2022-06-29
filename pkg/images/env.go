@@ -5,8 +5,8 @@ import (
 	"os/exec"
 )
 
-func (ib *ImageBuilder) CheckEnvironment() error {
-	for _, cmd := range []string{Debootstrap} {
+func (ib *Builder) CheckEnvironment() error {
+	for _, cmd := range Binaries {
 		_, err := exec.LookPath(cmd)
 		if err != nil {
 			return fmt.Errorf("required cmd '%s' not found", cmd)
