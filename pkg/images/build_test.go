@@ -25,9 +25,10 @@ func TestImageBuilds(t *testing.T) {
 	xlog.SetOutput(testLogger{t})
 
 	tests := []struct {
-		confs   []ImageConf
-		prepare func(imagesDir string)
-		test    func(imagesDir string, res *BuilderResult)
+		confs        []ImageConf
+		prepare      func(imagesDir string)
+		test         func(imagesDir string, res *BuilderResult)
+		forceRebuild bool
 	}{
 		{
 			confs: []ImageConf{
@@ -111,6 +112,23 @@ func TestImageBuilds(t *testing.T) {
 				assert.Equal(t, "", r.ImageResults["image2"].CachedImageDeleted)
 				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", DefaultImageExt)))
 			},
+		}, {
+			confs: []ImageConf{
+				ImageConf{Name: "base"},
+			},
+			prepare: func(dir string) {
+				fname := path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt))
+				f, err := os.Create(fname)
+				assert.Nil(t, err)
+				defer f.Close()
+			},
+			test: func(dir string, r *BuilderResult) {
+				assert.Nil(t, r.Err())
+				assert.Equal(t, 1, len(r.ImageResults))
+				assert.False(t, r.ImageResults["base"].CachedImageUsed)
+				assert.NotEqual(t, "", r.ImageResults["base"].CachedImageDeleted)
+			},
+			forceRebuild: true,
 		},
 	}
 
@@ -135,6 +153,7 @@ func TestImageBuilds(t *testing.T) {
 			}
 			ib, err := NewImageBuilder(conf)
 			assert.Nil(t, err)
+			bldConf.ForceRebuild = test.forceRebuild
 			res := ib.BuildAllImages(&bldConf)
 			test.test(dir, res)
 		}()
