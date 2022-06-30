@@ -64,6 +64,7 @@ func ExampleConfigCommand() *cobra.Command {
 
 func BuildImagesCommand() *cobra.Command {
 	var configFname, dirName string
+	var forceRebuild bool
 
 	cmd := &cobra.Command{
 		Use:   "build-images",
@@ -93,8 +94,9 @@ func BuildImagesCommand() *cobra.Command {
 
 			start := time.Now()
 			res := builder.BuildAllImages(&images.BuildConf{
-				Log:    log,
-				DryRun: false,
+				Log:          log,
+				DryRun:       false,
+				ForceRebuild: forceRebuild,
 			})
 			elapsed := time.Since(start)
 
@@ -117,6 +119,7 @@ func BuildImagesCommand() *cobra.Command {
 		"config", "",
 		fmt.Sprintf("config file (default is <dir>/%s)", images.DefaultConfFile),
 	)
+	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	return cmd
 }
 

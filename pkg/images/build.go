@@ -64,6 +64,8 @@ type BuildConf struct {
 
 	// if DryRun set, no actual images will be build. Instead, empty files will be created
 	DryRun bool
+	// if ForceRebuild is set, images will be build even if they exist already
+	ForceRebuild bool
 }
 
 type buildState struct {
@@ -129,34 +131,61 @@ func (b *buildState) buildImage(image string) BuildResult {
 	return res
 }
 
-func (b *buildState) doBuildImage(image string) BuildResult {
-	var imgRes BuildResult
-
+// skipRebuild checks if an image is not required to be build, because it
+// already exists.
+func (b *buildState) skipRebuild(image string) BuildResult {
 	imageFnamePrefix, err := b.ib.ImageFilenamePrefix(image)
 	if err != nil {
-		imgRes.Error = err
-		return imgRes
+		return BuildResult{
+			Error: err,
+		}
 	}
 	imageFname := fmt.Sprintf("%s.%s", imageFnamePrefix, DefaultImageExt)
-
 	if fi, err := os.Stat(imageFname); err == nil {
 		mode := fi.Mode()
 		if !mode.IsRegular() {
-			imgRes.Error = fmt.Errorf("'%s' is not a regular file. Bailing out.", imageFname)
-			return imgRes
+			// NB: we could do something like os.RemoveAll() here
+			// but this is a weird case, so we just bail out
+			err := fmt.Errorf("'%s' is not a regular file. Bailing out.", imageFname)
+			return BuildResult{
+				Error: err,
+			}
+		}
+
+		if b.bldConf.ForceRebuild {
+			os.Remove(imageFname)
+			return BuildResult{
+				CachedImageDeleted: fmt.Sprintf("image '%s' was deleted because a rebuild was forced", imageFname),
+			}
 		}
 
 		if !b.bldConf.DryRun && fi.Size() == 0 {
 			os.Remove(imageFname)
-			imgRes.CachedImageDeleted = fmt.Sprintf("image '%s' was an empty file, and this was not a dry run", imageFname)
-		} else if parent := b.ib.confs[image].Parent; parent != "" && !b.bldResult.ImageResults[parent].CachedImageUsed {
-			os.Remove(imageFname)
-			imgRes.CachedImageDeleted = fmt.Sprintf("image '%s' existed, but parent '%s' did not use the cache", imageFname, parent)
-		} else {
-			// no need to build anything
-			imgRes.CachedImageUsed = true
-			return imgRes
+			return BuildResult{
+				CachedImageDeleted: fmt.Sprintf("image '%s' was an empty file, and this was not a dry run", imageFname),
+			}
 		}
+
+		if parent := b.ib.confs[image].Parent; parent != "" && !b.bldResult.ImageResults[parent].CachedImageUsed {
+			os.Remove(imageFname)
+			return BuildResult{
+				CachedImageDeleted: fmt.Sprintf("image '%s' existed, but parent '%s' did not use the cache", imageFname, parent),
+			}
+		}
+
+		return BuildResult{
+			CachedImageUsed: true,
+		}
+	}
+	// NB: we might want to check the error that this is an actual ENOENT error
+	return BuildResult{}
+}
+
+func (b *buildState) doBuildImage(image string) BuildResult {
+
+	imgRes := b.skipRebuild(image)
+	if imgRes.Error != nil || imgRes.CachedImageUsed {
+		return imgRes
 	}
 
 	buildImage := func(image string) error {
