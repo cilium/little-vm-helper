@@ -88,7 +88,7 @@ func (ib *Builder) BuildAllImages(bldConf *BuildConf) *BuilderResult {
 	st := newBuildState(ib, bldConf)
 
 	if err := ib.CheckEnvironment(); err != nil {
-		st.bldResult.Error = err
+		st.bldResult.Error = fmt.Errorf("environment check failed: %w", err)
 		return &st.bldResult
 	}
 

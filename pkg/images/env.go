@@ -2,6 +2,7 @@ package images
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -12,5 +13,13 @@ func (ib *Builder) CheckEnvironment() error {
 			return fmt.Errorf("required cmd '%s' not found", cmd)
 		}
 	}
+
+	// libguestfs requires access to KVM
+	f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755)
+	if err != nil {
+		return fmt.Errorf("Unable to open /dev/kvm")
+	}
+	f.Close()
+
 	return nil
 }
