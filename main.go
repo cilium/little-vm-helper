@@ -32,27 +32,8 @@ func ExampleConfigCommand() *cobra.Command {
 		Use:   "example-config",
 		Short: "Print an example config file",
 		Run: func(cmd *cobra.Command, _ []string) {
-			images := []images.ImageConf{
-				{
-					Name: "base",
-					Packages: []string{
-						"less",
-						"vim",
-						"sudo",
-						"openssh-server",
-						"curl",
-					},
-				},
-				{
-					Name:   "k8s",
-					Parent: "base",
-					Packages: []string{
-						"docker.io",
-					},
-				},
-			}
-
-			confb, err := json.MarshalIndent(images, "", "    ")
+			conf := &images.ExampleImagesConf
+			confb, err := json.MarshalIndent(conf, "", "    ")
 			if err != nil {
 				log.Fatal(err)
 			}

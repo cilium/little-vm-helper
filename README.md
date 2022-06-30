@@ -21,6 +21,8 @@ It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.
  * improve boot time: minimize init, use qemu microvm
    (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html,
    https://mergeboard.com/blog/2-qemu-microvm-docker/)
+ * images: on a failed run, save everything in a image-failed-$(date) directory
+ * development workflow for MacOS X
 
 ## FAQ
 

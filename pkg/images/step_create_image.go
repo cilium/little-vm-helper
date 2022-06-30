@@ -10,7 +10,6 @@ import (
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -38,10 +37,9 @@ var (
 //    when downloading images).
 
 // CreateImage is a step for creating an image. It's cleanup will delete it if DelImageIfExists is set.
+
 type CreateImage struct {
-	imageDir string
-	imgCnf   *ImageConf
-	log      *logrus.Logger
+	*StepConf
 }
 
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
@@ -73,11 +71,7 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 		":",
 		"tar-in", tarFname, "/",
 	)
-	err = logcmd.RunAndLogCommand(cmd, s.log)
-	if err != nil {
-		os.Remove(imgFname)
-	}
-	return err
+	return logcmd.RunAndLogCommand(cmd, s.log)
 }
 
 func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
@@ -96,13 +90,7 @@ func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
 		"-a", imgFname,
 		"--install", strings.Join(s.imgCnf.Packages, ","),
 	)
-	err = logcmd.RunAndLogCommand(cmd, s.log)
-	if err != nil {
-		os.Remove(imgFname)
-		return err
-	}
-
-	return nil
+	return logcmd.RunAndLogCommand(cmd, s.log)
 }
 
 func (s *CreateImage) Run(ctx context.Context, b multistep.StateBag) multistep.StepAction {

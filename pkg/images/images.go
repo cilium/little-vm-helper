@@ -9,10 +9,10 @@ import (
 
 // ImageConf describes the configuration of an image
 type ImageConf struct {
-	Name     string
-	Parent   string
-	Packages []string
-	Actions  []Action
+	Name     string   `json:"name"`
+	Parent   string   `json:"parent,omitempty"`
+	Packages []string `json:"packages"`
+	Actions  []Action `json:"actions,omitempty"`
 }
 
 // ImageBuilder can be used to build images
