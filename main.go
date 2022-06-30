@@ -44,7 +44,8 @@ func ExampleConfigCommand() *cobra.Command {
 					},
 				},
 				{
-					Name: "k8s",
+					Name:   "k8s",
+					Parent: "base",
 					Packages: []string{
 						"docker.io",
 					},
