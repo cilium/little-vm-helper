@@ -1,4 +1,51 @@
-Still WiP
+##  Vamp
+
+Vamp is a VM management toolset, targeting testing and development. It should
+not be used for running production VMs. That is, it is only intended for VMs
+that have a "fire-once" lifetime. Booting fast, building images fast, and being
+storage efficient are the main goals.
+
+It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/).
+
+### TODO
+ * images: configuration option for using different deb distros (hardcoded to sid now)
+ * images: build tetragon images
+     * unit tests
+     * e2e tests (kind)
+ * images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
+ * kernels: add suport for buidling kernels
+ * runner: qemu runner wrapper
+ * images bootable VMs: running qemu with --kernel is convinient for
+   development. If we want to store images externally (e.g., AWS), it might
+   make sense to support bootable VMs.
+ * improve boot time: minimize init, use qemu microvm
+   (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html,
+   https://mergeboard.com/blog/2-qemu-microvm-docker/)
+
+## FAQ
+
+### Why not use packer to build images?
+
+Existing packer builders
+(e.g,.https://github.com/cilium/packer-ci-build/blob/710ad61e7d5b0b6872770729a30bcdade2ee1acb/cilium-ubuntu.json#L19,
+https://www.packer.io/plugins/builders/qemu) are meant to manage VMs with
+longer lifetimes than a single use, and use facilities that introduce unnecessary overhead for our use-case.
+
+Also, packer does not seem to have a way to provision images without booting a
+machine. There is an outdated chroot package
+https://github.com/summerwind/packer-builder-qemu-chroot, and cloud chroot builders
+(e.g., https://www.packer.io/plugins/builders/amazon/chroot).
+
+That being said, if we need packer functionality we can create a packer plugin
+(https://www.packer.io/docs/plugins/creation#developing-plugins).
+
+### Why not use vagrant (or libvirt-based tools)?
+
+These tools also target production VMs with lifetime streching beyond a single
+use. As a result, they introduce overhead in booting time, provisioning time,
+and storage.
+
+## Example:
 
 
 ```
