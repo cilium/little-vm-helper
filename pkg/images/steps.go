@@ -8,8 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/kkourt/vamp/pkg/logcmd"
 	"github.com/sirupsen/logrus"
 )
 

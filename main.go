@@ -8,7 +8,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/kkourt/vamp/pkg/images"
+	"github.com/cilium/little-vm-helper/pkg/images"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -17,8 +17,8 @@ var (
 	exampleConfigCmd = ExampleConfigCommand()
 	buildImagesCmd   = BuildImagesCommand()
 	rootCmd          = &cobra.Command{
-		Use:   "vamp",
-		Short: "vamp builds and runs VMs",
+		Use:   "little-vm-helper",
+		Short: "hellper to build and run VMs",
 	}
 )
 

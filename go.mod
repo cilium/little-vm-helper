@@ -1,4 +1,4 @@
-module github.com/kkourt/vamp
+module github.com/cilium/little-vm-helper
 
 go 1.18
 

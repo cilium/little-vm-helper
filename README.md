@@ -1,6 +1,6 @@
-##  Vamp
+##  little-vm-helper
 
-Vamp is a VM management toolset, targeting testing and development. It should
+little-vm-helper is a VM management toolset, targeting testing and development. It should
 not be used for running production VMs. That is, it is only intended for VMs
 that have a "fire-once" lifetime. Booting fast, building images fast, and being
 storage efficient are the main goals.
@@ -93,3 +93,7 @@ INFO[0092] images built succesfully                      time-elapsed=1m32.10037
 image:base       cachedImageUsed:false cachedImageDeleted:
 image:k8s        cachedImageUsed:false cachedImageDeleted:
 ```
+
+## Notes
+
+Previous attempt: https://github.com/kkourt/kvm-dev-scripts
