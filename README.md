@@ -1,9 +1,9 @@
 ##  little-vm-helper
 
-little-vm-helper is a VM management toolset, targeting testing and development. It should
-not be used for running production VMs. That is, it is only intended for VMs
-that have a "fire-once" lifetime. Booting fast, building images fast, and being
-storage efficient are the main goals.
+little-vm-helper is a VM management toolset, targeting testing and development, especially with
+features that are dependent the kernel, such as BPF. It should not be used for running production
+VMs. That is, it is only intended for VMs that have a "fire-once" lifetime. Booting fast, building
+images fast, and being storage efficient are the main goals.
 
 It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/).
 
@@ -13,6 +13,7 @@ It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.
      * unit tests
      * e2e tests (kind)
  * images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
+    * is that possible? libguestfs needs to boot a mini-VM
  * kernels: add suport for buidling kernels
  * runner: qemu runner wrapper
  * images bootable VMs: running qemu with --kernel is convinient for
