@@ -12,59 +12,59 @@ import (
 
 func TestImageBuilderConfs(t *testing.T) {
 	tests := []struct {
-		confs []ImageConf
-		test  func(*Builder, error)
+		confs []ImgConf
+		test  func(*ImageForest, error)
 	}{
 		{
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
-				ImageConf{Name: "base"},
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "base"},
 			},
-			test: func(ib *Builder, err error) {
-				assert.Nil(t, ib)
+			test: func(f *ImageForest, err error) {
+				assert.Nil(t, f)
 				assert.Error(t, err)
 			},
 		},
 		{
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
+			confs: []ImgConf{
+				{Name: "base"},
 			},
-			test: func(ib *Builder, err error) {
-				assert.NotNil(t, ib)
+			test: func(f *ImageForest, err error) {
+				assert.NotNil(t, f)
 				assert.Nil(t, err)
 			},
 		},
 		{
 			// error: parent is not defined anywhere
-			confs: []ImageConf{
-				ImageConf{Name: "image1", Parent: "base"},
+			confs: []ImgConf{
+				{Name: "image1", Parent: "base"},
 			},
-			test: func(ib *Builder, err error) {
-				assert.Nil(t, ib)
+			test: func(f *ImageForest, err error) {
+				assert.Nil(t, f)
 				assert.NotNil(t, err)
 			},
 		},
 		{
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
-				ImageConf{Name: "image1", Parent: "base"},
-				ImageConf{Name: "image2", Parent: "image1"},
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "image1", Parent: "base"},
+				{Name: "image2", Parent: "image1"},
 			},
-			test: func(ib *Builder, err error) {
-				assert.NotNil(t, ib)
+			test: func(f *ImageForest, err error) {
+				assert.NotNil(t, f)
 				assert.Nil(t, err)
 				{
-					deps, err := ib.getDependencies("image1")
+					deps, err := f.getDependencies("image1")
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base"})
 				}
 				{
-					deps, err := ib.getDependencies("image2")
+					deps, err := f.getDependencies("image2")
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base", "image1"})
 				}
-				assert.Equal(t, ib.LeafImages(), []string{"image2"})
-				assert.Equal(t, ib.RootImages(), []string{"base"})
+				assert.Equal(t, f.LeafImages(), []string{"image2"})
+				assert.Equal(t, f.RootImages(), []string{"base"})
 			},
 		},
 	}
@@ -76,18 +76,17 @@ func TestImageBuilderConfs(t *testing.T) {
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 			test := &tests[i]
-			conf := &BuilderConf{
-				ImageDir:     dir,
-				Images:       test.confs,
-				saveConfFile: true,
+			conf := &ImagesConf{
+				Dir:    dir,
+				Images: test.confs,
 			}
-			ib, err := NewImageBuilder(conf)
-			test.test(ib, err)
+			f, err := NewImageForest(conf, true)
+			test.test(f, err)
 			// if no errors, verify that conf.json matches the configuration
 			if err == nil {
 				data, err := os.ReadFile(path.Join(dir, DefaultConfFile))
 				assert.Nil(t, err)
-				var fcnf BuilderConf
+				var fcnf ImagesConf
 				err = json.Unmarshal(data, &fcnf)
 				assert.Nil(t, err)
 				assert.Equal(t, &conf.Images, &fcnf.Images)

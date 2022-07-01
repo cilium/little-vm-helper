@@ -6,7 +6,7 @@ import (
 	"os/exec"
 )
 
-func (ib *Builder) CheckEnvironment() error {
+func CheckEnvironment() error {
 	for _, cmd := range Binaries {
 		_, err := exec.LookPath(cmd)
 		if err != nil {

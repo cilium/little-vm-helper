@@ -5,6 +5,6 @@ import "github.com/sirupsen/logrus"
 // StepConf is common step configuration
 type StepConf struct {
 	imageDir string
-	imgCnf   *ImageConf
+	imgCnf   *ImgConf
 	log      *logrus.Logger
 }

@@ -1,6 +1,6 @@
 package images
 
-var ExampleImagesConf = []ImageConf{
+var ExampleImagesConf = []ImgConf{
 	{
 		Name: "base",
 		Packages: []string{

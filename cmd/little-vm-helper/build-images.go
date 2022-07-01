@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -12,36 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
-
-var (
-	exampleConfigCmd = ExampleConfigCommand()
-	buildImagesCmd   = BuildImagesCommand()
-	rootCmd          = &cobra.Command{
-		Use:   "little-vm-helper",
-		Short: "hellper to build and run VMs",
-	}
-)
-
-func init() {
-	rootCmd.AddCommand(buildImagesCmd)
-	rootCmd.AddCommand(exampleConfigCmd)
-}
-
-func ExampleConfigCommand() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "example-config",
-		Short: "Print an example config file",
-		Run: func(cmd *cobra.Command, _ []string) {
-			conf := &images.ExampleImagesConf
-			confb, err := json.MarshalIndent(conf, "", "    ")
-			if err != nil {
-				log.Fatal(err)
-			}
-			os.Stdout.Write(confb)
-		},
-	}
-	return cmd
-}
 
 func BuildImagesCommand() *cobra.Command {
 	var configFname, dirName string
@@ -61,20 +30,20 @@ func BuildImagesCommand() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			var cnf images.BuilderConf
-			cnf.ImageDir = dirName
+			var cnf images.ImagesConf
+			cnf.Dir = dirName
 			err = json.Unmarshal(configData, &cnf.Images)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			builder, err := images.NewImageBuilder(&cnf)
+			forest, err := images.NewImageForest(&cnf, false)
 			if err != nil {
 				log.Fatal(err)
 			}
 
 			start := time.Now()
-			res := builder.BuildAllImages(&images.BuildConf{
+			res := forest.BuildAllImages(&images.BuildConf{
 				Log:          log,
 				DryRun:       dryRun,
 				ForceRebuild: forceRebuild,
@@ -103,8 +72,4 @@ func BuildImagesCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
 	return cmd
-}
-
-func main() {
-	rootCmd.Execute()
 }

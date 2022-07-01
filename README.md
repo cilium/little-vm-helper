@@ -53,8 +53,8 @@ and storage.
 
 ```
 $ mkdir images
-$ go run main.go example-config > images/conf.json
-$ go run main.go build-images --dir ./images
+$ go run cmd/little-vm-helper example-config > images/conf.json
+$ go run cmd/little-vm-helper build-images --dir ./images
 INFO[0000] starting to build all images                  queue=base
 INFO[0000] starting command                              args="[mmdebstrap sid --include less,vim,sudo,openssh-server,curl images/base.tar]" path=/usr/bin/mmdebstrap
 WARN[0000] stderr> I: automatically chosen mode: unshare

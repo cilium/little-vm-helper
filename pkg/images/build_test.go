@@ -25,14 +25,14 @@ func TestImageBuilds(t *testing.T) {
 	xlog.SetOutput(testLogger{t})
 
 	tests := []struct {
-		confs        []ImageConf
+		confs        []ImgConf
 		prepare      func(imagesDir string)
 		test         func(imagesDir string, res *BuilderResult)
 		forceRebuild bool
 	}{
 		{
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
+			confs: []ImgConf{
+				{Name: "base"},
 			},
 			test: func(dir string, r *BuilderResult) {
 				assert.Nil(t, r.Err())
@@ -42,10 +42,10 @@ func TestImageBuilds(t *testing.T) {
 				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt)))
 			},
 		}, {
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
-				ImageConf{Name: "image1", Parent: "base"},
-				ImageConf{Name: "image2", Parent: "image1"},
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "image1", Parent: "base"},
+				{Name: "image2", Parent: "image1"},
 			},
 			test: func(dir string, r *BuilderResult) {
 				assert.Nil(t, r.Err())
@@ -57,10 +57,10 @@ func TestImageBuilds(t *testing.T) {
 				}
 			},
 		}, {
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
-				ImageConf{Name: "image1", Parent: "base"},
-				ImageConf{Name: "image2", Parent: "image1"},
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "image1", Parent: "base"},
+				{Name: "image2", Parent: "image1"},
 			},
 			prepare: func(dir string) {
 				fname := path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt))
@@ -85,10 +85,10 @@ func TestImageBuilds(t *testing.T) {
 				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", DefaultImageExt)))
 			},
 		}, {
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
-				ImageConf{Name: "image1", Parent: "base"},
-				ImageConf{Name: "image2", Parent: "image1"},
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "image1", Parent: "base"},
+				{Name: "image2", Parent: "image1"},
 			},
 			prepare: func(dir string) {
 				fname := path.Join(dir, fmt.Sprintf("%s.%s", "image1", DefaultImageExt))
@@ -113,8 +113,8 @@ func TestImageBuilds(t *testing.T) {
 				assert.FileExists(t, path.Join(dir, fmt.Sprintf("%s.%s", "image2", DefaultImageExt)))
 			},
 		}, {
-			confs: []ImageConf{
-				ImageConf{Name: "base"},
+			confs: []ImgConf{
+				{Name: "base"},
 			},
 			prepare: func(dir string) {
 				fname := path.Join(dir, fmt.Sprintf("%s.%s", "base", DefaultImageExt))
@@ -147,11 +147,11 @@ func TestImageBuilds(t *testing.T) {
 			if test.prepare != nil {
 				test.prepare(dir)
 			}
-			conf := &BuilderConf{
-				ImageDir: dir,
-				Images:   test.confs,
+			conf := &ImagesConf{
+				Dir:    dir,
+				Images: test.confs,
 			}
-			ib, err := NewImageBuilder(conf)
+			ib, err := NewImageForest(conf, false)
 			assert.Nil(t, err)
 			bldConf.ForceRebuild = test.forceRebuild
 			res := ib.BuildAllImages(&bldConf)
