@@ -1,59 +1,35 @@
-package main
+package kernels
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func KernelsCommand() *cobra.Command {
-	var dirName string
-	cmd := &cobra.Command{
-		Use:   "kernels",
-		Short: "build kernels",
-	}
-	cmd.PersistentFlags().StringVar(&dirName, "dir", "", "directory to to place kernels")
-	cmd.MarkFlagRequired("dir")
+func addCommand() *cobra.Command {
+	addExamples := func() string {
+		var sb strings.Builder
 
-	initCmd := &cobra.Command{
-		Use:   "init",
-		Short: "initialize a directory for the kernel builder",
-		Run: func(cmd *cobra.Command, _ []string) {
-			log := logrus.New()
-			err := kernels.InitDir(dirName, nil)
-			if err != nil {
-				log.Fatal(err)
-			}
-		},
-	}
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "list available kernels (by reading config file in directory)",
-		Run: func(cmd *cobra.Command, _ []string) {
-			log := logrus.New()
-			kd, err := kernels.LoadDir(dirName)
-			if err != nil {
-				log.Fatal(err)
-			}
+		for _, ex := range kernels.UrlExamples {
+			sb.WriteString(fmt.Sprintf("  add %s %s\n", ex.Name, ex.URL))
+		}
 
-			for _, k := range kd.Conf.Kernels {
-				fmt.Printf("%-13s %s", k.Name, k.URL)
-			}
-		},
+		return sb.String()
 	}
 
 	var addConfigGroups []string
-	var addPrintConfig bool
+	var addPrintConfig, addFetch bool
 	addCmd := &cobra.Command{
 		Use:     "add <name> <url> (e.g., add bpf-next )",
 		Short:   "add kernel (by updating config file in directory)",
-		Example: fmt.Sprintf("add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git\nadd 5.18.8 git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#v5.18.8"),
+		Example: addExamples(),
+		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			log := logrus.New()
 
@@ -84,8 +60,14 @@ func KernelsCommand() *cobra.Command {
 				log.Fatal(err)
 			}
 
+			kURL, err := kernels.ParseURL(kconf.URL)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			kURL.Fetch(context.Background(), log, dirName, kconf.Name)
+
 		},
-		Args: cobra.ExactArgs(2),
 	}
 	addCmd.Flags().StringSliceVar(
 		&addConfigGroups,
@@ -96,18 +78,6 @@ func KernelsCommand() *cobra.Command {
 		),
 	)
 	addCmd.Flags().BoolVar(&addPrintConfig, "just-print-config", false, "do not actually add the kernel. Just print its config.")
-	cmd.AddCommand(initCmd, listCmd, addCmd)
-
-	/*
-
-
-		add := &cobra.Command{
-			Use:   "build",
-			Short: "build kernel",
-		}
-
-		rm := &cobra.Command{}
-	*/
-
-	return cmd
+	addCmd.Flags().BoolVar(&addFetch, "fetch", false, "fetch URL")
+	return addCmd
 }

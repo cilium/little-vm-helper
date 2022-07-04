@@ -50,6 +50,8 @@ and storage.
 
 ## Example:
 
+### Images
+
 
 ```
 $ mkdir images

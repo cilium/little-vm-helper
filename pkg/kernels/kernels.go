@@ -1,10 +1,14 @@
 package kernels
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 var ConfigFname = "conf.json"
@@ -54,13 +58,31 @@ func AddKernel(dir string, cnf *KernelConf) error {
 	}
 
 	if kd.KernelConfig(cnf.Name) != nil {
-		return fmt.Errorf("kernel `%s` already exist", cnf.Name)
+		return fmt.Errorf("kernel `%s` already exists", cnf.Name)
 	}
 
 	kd.Conf.Kernels = append(kd.Conf.Kernels, *cnf)
 	return kd.Conf.SaveTo(dir)
 }
 
-func BuildKernel(dir string, name string) error {
+func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name string) error {
+	kd, err := LoadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	if kd.RemoveKernelConfig(name) == nil {
+		log.Warnf("kernel `%s` does not exist in configuration", name)
+	} else {
+		defer kd.Conf.SaveTo(dir)
+	}
+
+	gitRemoveWorkdir(ctx, log, &gitRemoveWorkdirArg{
+		workDir:     name,
+		bareDir:     filepath.Join(dir, MainGitDir),
+		remoteName:  name,
+		localBranch: fmt.Sprintf("lvh-%s", name),
+	})
+
 	return nil
 }

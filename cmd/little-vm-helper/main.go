@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/cilium/little-vm-helper/cmd/little-vm-helper/kernels"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +17,7 @@ func init() {
 	rootCmd.AddCommand(
 		BuildImagesCommand(),
 		ExampleConfigCommand(),
-		KernelsCommand(),
+		kernels.KernelsCommand(),
 	)
 }
 

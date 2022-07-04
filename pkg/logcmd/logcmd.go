@@ -2,6 +2,7 @@ package logcmd
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -83,4 +84,14 @@ func RunAndLogCommand(
 	log *logrus.Logger,
 ) error {
 	return runAndLogCommand(cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+}
+
+func RunAndLogCmdContext(
+	ctx context.Context,
+	log *logrus.Logger,
+	cmd0 string,
+	cmdArgs ...string,
+) error {
+	cmd := exec.CommandContext(ctx, cmd0, cmdArgs...)
+	return RunAndLogCommand(cmd, log)
 }
