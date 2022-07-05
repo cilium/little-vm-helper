@@ -154,7 +154,7 @@ conf.json
 git/
 ```
 
-Currently, kernels are build using the `bzImage` and `dir-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
+Currently, kernels are built using the `bzImage` and `dir-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
 
 ### Booting images
 
@@ -164,7 +164,7 @@ The goal is to have some wrappers for running qemu, but until then, here is an e
 qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic -kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage  -append "root=/dev/sda console=ttyS0"
 ```
 
-Or, even,:
+Or, even:
 
 ```
 qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic
