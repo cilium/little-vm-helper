@@ -7,8 +7,8 @@ tests:
 	$(GO) test -cover ./...
 
 little-vm-helper: FORCE
-	$(GO) build ./cmd/little-vm-helper
+	$(GO) build ./cmd/lvh
 
 clean:
-	rm -f little-vm-helper
+	rm -f lvh
 FORCE:

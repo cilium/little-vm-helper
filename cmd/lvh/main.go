@@ -1,16 +1,16 @@
 package main
 
 import (
-	"github.com/cilium/little-vm-helper/cmd/little-vm-helper/images"
-	"github.com/cilium/little-vm-helper/cmd/little-vm-helper/kernels"
+	"github.com/cilium/little-vm-helper/cmd/lvh/images"
+	"github.com/cilium/little-vm-helper/cmd/lvh/kernels"
 
 	"github.com/spf13/cobra"
 )
 
 var (
 	rootCmd = &cobra.Command{
-		Use:   "little-vm-helper",
-		Short: "hellper to build and run VMs",
+		Use:   "lvh",
+		Short: "little-vm-helper -- helper to build and run VMs",
 	}
 )
 
