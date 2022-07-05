@@ -8,22 +8,18 @@ images fast, and being storage efficient are the main goals.
 It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/).
 
 ### TODO
- * images: configuration option for using different deb distros (hardcoded to sid now)
- * images: build tetragon images
-     * unit tests
-     * e2e tests (kind)
- * images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
-    * is that possible? libguestfs needs to boot a mini-VM
- * kernels: add suport for buidling kernels
- * runner: qemu runner wrapper
- * images bootable VMs: running qemu with --kernel is convinient for
-   development. If we want to store images externally (e.g., AWS), it might
-   make sense to support bootable VMs.
- * improve boot time: minimize init, use qemu microvm
-   (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html,
-   https://mergeboard.com/blog/2-qemu-microvm-docker/)
- * images: on a failed run, save everything in a image-failed-$(date) directory
- * development workflow for MacOS X
+ - [ ] development workflow for MacOS X
+ - [ ] images: configuration option for using different deb distros (hardcoded to sid now)
+ - [ ] images: build tetragon images
+ - [ ]   * unit tests
+ - [ ]   * e2e tests (kind)
+ - [ ] images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
+ - [ ]  * is that possible? libguestfs needs to boot a mini-VM
+ - [x] kernels: add suport for buidling kernels
+ - [ ] runner: qemu runner wrapper
+ - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
+ - [ ] improve boot time: minimal init, use qemu microvm (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html, https://mergeboard.com/blog/2-qemu-microvm-docker/)
+ - [ ] images: on a failed run, save everything in a image-failed-$(date) directory
 
 ## FAQ
 
@@ -159,6 +155,22 @@ git/
 ```
 
 Currently, kernels are build using the `bzImage` and `dir-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
+
+### Booting images
+
+The goal is to have some wrappers for running qemu, but until then, here is an example:
+
+```
+qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic -kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage  -append "root=/dev/sda console=ttyS0"
+```
+
+Or, even,:
+
+```
+qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic
+```
+
+
 
 ## Notes
 

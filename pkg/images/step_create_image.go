@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
@@ -40,13 +41,42 @@ var (
 
 type CreateImage struct {
 	*StepConf
+	bootable bool
 }
+
+func NewCreateImage(cnf *StepConf) *CreateImage {
+	return &CreateImage{
+		StepConf: cnf,
+		// NB(kkourt): for now all the images we create are bootable because we can always
+		// boot them by directly specifing -kernel in qemu. Kept this, however, in case at
+		// some point we want to change it. Note, also, that because all images are
+		// bootable, it is sufficient to do create root bootable images.
+		bootable: true,
+	}
+}
+
+var extLinuxConf = `
+default linux
+timeout 0
+
+label linux
+kernel /vmlinuz
+append initrd=initrd.img root=/dev/sda rw console=ttyS0
+`
 
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	tarFname := path.Join(s.imageDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
+
+	// build package list: add a kernel if building a bootable image
+	packages := make([]string, 0, len(s.imgCnf.Packages)+1)
+	if s.bootable {
+		packages = append(packages, "linux-image-amd64")
+	}
+	packages = append(packages, s.imgCnf.Packages...)
+
 	cmd := exec.CommandContext(ctx, Mmdebstrap,
 		"sid",
-		"--include", strings.Join(s.imgCnf.Packages, ","),
+		"--include", strings.Join(packages, ","),
 		tarFname,
 	)
 	err := logcmd.RunAndLogCommand(cmd, s.log)
@@ -62,15 +92,47 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 
 	imgFname := path.Join(s.imageDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
 	// example: guestfish -N foo.img=disk:8G -- mkfs ext4 /dev/sda : mount /dev/sda / : tar-in /tmp/foo.tar /
-	cmd = exec.CommandContext(ctx, GuestFish,
-		"-N", fmt.Sprintf("%s=disk:%s", imgFname, DefaultImageSize),
-		"--",
-		"mkfs", "ext4", "/dev/sda",
-		":",
-		"mount", "/dev/sda", "/",
-		":",
-		"tar-in", tarFname, "/",
-	)
+	if s.bootable {
+		dirname, err := os.MkdirTemp("", "extlinux-")
+		if err != nil {
+			return err
+		}
+		defer func() {
+			os.RemoveAll(dirname)
+		}()
+		fname := filepath.Join(dirname, "extlinux.conf")
+		if err := os.WriteFile(fname, []byte(extLinuxConf), 0722); err != nil {
+			return err
+		}
+
+		cmd = exec.CommandContext(ctx, GuestFish,
+			"-N", fmt.Sprintf("%s=disk:%s", imgFname, DefaultImageSize),
+			"--",
+			"part-disk", "/dev/sda", "mbr",
+			":",
+			"part-set-bootable", "/dev/sda", "1", "true",
+			":",
+			"mkfs", "ext4", "/dev/sda",
+			":",
+			"mount", "/dev/sda", "/",
+			":",
+			"tar-in", tarFname, "/",
+			":",
+			"extlinux", "/",
+			":",
+			"copy-in", fname, "/",
+		)
+	} else {
+		cmd = exec.CommandContext(ctx, GuestFish,
+			"-N", fmt.Sprintf("%s=disk:%s", imgFname, DefaultImageSize),
+			"--",
+			"mkfs", "ext4", "/dev/sda",
+			":",
+			"mount", "/dev/sda", "/",
+			":",
+			"tar-in", tarFname, "/",
+		)
+	}
 	return logcmd.RunAndLogCommand(cmd, s.log)
 }
 
