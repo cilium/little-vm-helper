@@ -20,7 +20,7 @@ func listCommand() *cobra.Command {
 			}
 
 			for _, k := range kd.Conf.Kernels {
-				fmt.Printf("%-13s %s %s\n", k.Name, k.URL)
+				fmt.Printf("%-13s %s\n", k.Name, k.URL)
 			}
 		},
 	}
