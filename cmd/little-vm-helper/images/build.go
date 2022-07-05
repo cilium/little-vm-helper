@@ -1,4 +1,4 @@
-package main
+package images
 
 import (
 	"encoding/json"
@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func BuildImagesCommand() *cobra.Command {
+func BuildCmd() *cobra.Command {
 	var configFname, dirName string
 	var forceRebuild, dryRun bool
 
 	cmd := &cobra.Command{
-		Use:   "build-images",
+		Use:   "build",
 		Short: "Build VM images",
 		Run: func(cmd *cobra.Command, _ []string) {
 			log := logrus.New()

@@ -1,4 +1,4 @@
-package main
+package images
 
 import (
 	"encoding/json"
@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func ExampleConfigCommand() *cobra.Command {
+func ExampleCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "example-config",
-		Short: "Print an example config file",
+		Short: "Print an example config",
 		Run: func(cmd *cobra.Command, _ []string) {
 			conf := &images.ExampleImagesConf
 			confb, err := json.MarshalIndent(conf, "", "    ")
