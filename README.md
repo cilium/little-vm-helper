@@ -11,10 +11,10 @@ It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.
  - [ ] development workflow for MacOS X
  - [ ] images: configuration option for using different deb distros (hardcoded to sid now)
  - [ ] images: build tetragon images
- - [ ]   * unit tests
- - [ ]   * e2e tests (kind)
+   - [ ] unit tests
+   - [ ] e2e tests (kind)
  - [ ] images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
- - [ ]  * is that possible? libguestfs needs to boot a mini-VM
+        - [ ]  is that possible? libguestfs needs to boot a mini-VM
  - [x] kernels: add suport for buidling kernels
  - [ ] runner: qemu runner wrapper
  - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
