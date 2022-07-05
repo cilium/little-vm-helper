@@ -50,46 +50,116 @@ and storage.
 
 ## Example:
 
+For an example script, see [scripts/example.sh](scripts/example.sh)
+
 ### Images
 
+Build example images:
+```
+$ mkdir -p _data/images
+$ go run cmd/little-vm-helper example-config > _data/images/conf.json
+$ go run cmd/little-vm-helper build-images --dir _data/images
+```
+
+The first command will create a configuration file:
+```
+jq . < _data/images/conf.json 
+[
+  {
+    "name": "base",
+    "packages": [
+      "less",
+      "vim",
+      "sudo",
+      "openssh-server",
+      "curl"
+    ],
+    "actions": [
+      {
+        "comment": "disable password for root",
+        "op": {
+          "Cmd": "passwd -d root"
+        },
+        "type": "run-command"
+      }
+    ]
+  },
+  {
+    "name": "k8s",
+    "parent": "base",
+    "packages": [
+      "docker.io"
+    ]
+  }
+]
+```
+
+The configuration file includes:
+ * a set of packages for the image
+ * an optioanl parent image
+ * a set of actions to be performed after the installation of the packets. For now, only a
+   "run-command" action  is supported, where a command is executed inside the image (using
+   `virt-customize`) but other ones can be easily added (see
+   [pkg/images/actions.go](pkg/images/actions.go))
+
+After the `build-images` command completes, there will be two images in the images directory. Note
+that the images are stored as sparse files so they take less space:
 
 ```
-$ mkdir images
-$ go run cmd/little-vm-helper example-config > images/conf.json
-$ go run cmd/little-vm-helper build-images --dir ./images
-INFO[0000] starting to build all images                  queue=base
-INFO[0000] starting command                              args="[mmdebstrap sid --include less,vim,sudo,openssh-server,curl images/base.tar]" path=/usr/bin/mmdebstrap
-WARN[0000] stderr> I: automatically chosen mode: unshare
-WARN[0000] stderr> I: chroot architecture amd64 is equal to the host's architecture
-WARN[0000] stderr> I: Reading sources.list from standard input...
-WARN[0000] stderr> I: using /tmp/mmdebstrap.Iixrf4Anko as tempdir
-WARN[0000] stderr> I: running apt-get update...
-WARN[0004] stderr> I: downloading packages with apt...
-WARN[0006] stderr> I: extracting archives...
-WARN[0008] stderr> I: installing packages...
-WARN[0016] stderr> I: downloading apt...
-WARN[0017] stderr> I: installing apt...
-WARN[0020] stderr> I: installing remaining packages inside the chroot...
-WARN[0038] stderr> I: cleaning package lists and apt cache...
-WARN[0038] stderr> I: creating tarball...
-WARN[0039] stderr> I: done
-WARN[0040] stderr> I: removing tempdir /tmp/mmdebstrap.Iixrf4Anko...
-INFO[0040] starting command                              args="[guestfish -N images/base.img=disk:8G -- mkfs ext4 /dev/sda : mount /dev/sda / : tar-in images/base.tar /]" path=/usr/bin/guestfish
-INFO[0043] image built succesfully                       image=base queue=k8s result="{Error:<nil> CachedImageUsed:false CachedImageDeleted:}"
-INFO[0043] starting command                              args="[cp --sparse always -n images/base.img images/k8s.img]" path=/usr/bin/cp
-INFO[0043] starting command                              args="[virt-customize -a images/k8s.img --install docker.io]" path=/usr/bin/virt-customize
-INFO[0043] stdout> [   0.0] Examining the guest ...
-INFO[0046] stdout> [   2.6] Setting a random seed
-INFO[0046] stdout> virt-customize: warning: random seed could not be set for this type of
-INFO[0046] stdout> guest
-INFO[0046] stdout> [   2.6] Installing packages: docker.io
-INFO[0079] stdout> [  35.6] Finishing off
-INFO[0079] image built succesfully                       image=k8s queue= result="{Error:<nil> CachedImageUsed:false CachedImageDeleted:}"
-INFO[0079] images built succesfully                      time-elapsed=1m19.680405705s
-image:base       cachedImageUsed:false cachedImageDeleted:
-image:k8s        cachedImageUsed:false cachedImageDeleted:
+$ ls -sh1 _data/images/*.img
+341M _data/images/base.img
+1.2G _data/images/k8s.img
 ```
+
+
+### Kernels
+
+```
+$ mkdir -p _data/kernels
+$ go run cmd/lvh kernels --dir _data/kernels init
+$ go run cmd/lvh kernels --dir _data/kernels add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
+$ go run cmd/lvh kernels --dir _data/kernels build bpf-next
+```
+
+The configuration file keeps the url for a kernel, togther with its configuration options:
+```
+$ jq . < _data/kernels/conf.json  
+{
+  "kernels": [
+    {
+      "name": "bpf-next",
+      "url": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
+      "opts": [
+        [
+          "--enable",
+          "CONFIG_LOCALVERSION_AUTO"
+        ],
+	... more options ...
+        [
+          "--disable",
+          "CONFIG_SOUND"
+        ]
+      ]
+    },
+  ]
+}
+```
+
+The kernels are kept in [worktrees](https://git-scm.com/docs/git-worktree). Specifically, There is a
+git bare directory (`git`) that holds all the objects, and one worktree per kernel. This allows
+efficient fetching and, also, having each kernel on its own seperate directory.
+
+For example:
+```
+$ ls -1 _data/kernels 
+5.18/
+bpf-next/
+conf.json
+git/
+```
+
+Currently, kernels are build using the `bzImage` and `dir-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
 
 ## Notes
 
-Based on: https://github.com/kkourt/kvm-dev-scripts
+Previous attempt of doing this was: https://github.com/kkourt/kvm-dev-scripts

@@ -17,11 +17,11 @@ var UrlExamples = []UrlExample{
 			Branch: "master",
 		},
 	}, {
-		Name: "5.18.8",
-		URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#v5.18.8",
+		Name: "5.18",
+		URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#linux-5.18.y",
 		expectedKernelURL: &GitURL{
 			Repo:   "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
-			Branch: "v5.18.8",
+			Branch: "linux-5.18.y",
 		},
 	},
 }

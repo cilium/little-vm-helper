@@ -64,6 +64,8 @@ var ConfigOptGroups = map[string][]ConfigOption{
 	},
 }
 
+var DefaultConfigGroups = []string{"basic", "bpf", "virtio", "minimize"}
+
 func GetConfigGroupNames() []string {
 	ret := make([]string, 0, len(ConfigOptGroups))
 	for k := range ConfigOptGroups {
@@ -129,6 +131,26 @@ func (kc *KernelConf) Configure(ctx context.Context, log *logrus.Logger, dir str
 
 func (kc *KernelConf) Build(ctx context.Context, log *logrus.Logger, dir string) error {
 	srcDir := filepath.Join(dir, kc.Name)
-	err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "-j", fmt.Sprintf("%d", runtime.NumCPU()))
-	return err
+	configFname := filepath.Join(srcDir, ".config")
+
+	if exists, err := regularFileExists(configFname); err != nil {
+		return err
+	} else if !exists {
+		log.Info("Configuring kernel")
+		err := kc.Configure(ctx, log, dir)
+		if err != nil {
+			return fmt.Errorf("failed to configure kernel: %w", err)
+		}
+	}
+
+	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
+	if err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
+		return fmt.Errorf("buiding bzImage failed: %w", err)
+	}
+
+	if err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "dir-pkg"); err != nil {
+		return fmt.Errorf("build dir failed: %w", err)
+	}
+
+	return nil
 }

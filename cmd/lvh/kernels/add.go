@@ -65,13 +65,18 @@ func addCommand() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			kURL.Fetch(context.Background(), log, dirName, kconf.Name)
+			if addFetch {
+				err := kURL.Fetch(context.Background(), log, dirName, kconf.Name)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
 
 		},
 	}
 	addCmd.Flags().StringSliceVar(
 		&addConfigGroups,
-		"config-groups", []string{},
+		"config-groups", kernels.DefaultConfigGroups,
 		fmt.Sprintf(
 			"add configuration options based on the following predefined groups: %s",
 			strings.Join(kernels.GetConfigGroupNames(), ","),

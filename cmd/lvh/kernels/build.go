@@ -21,12 +21,22 @@ func buildCommand() *cobra.Command {
 			}
 
 			kname := args[0]
-			kcfg := kd.KernelConfig(kname)
-			if kcfg == nil {
+			kconf := kd.KernelConfig(kname)
+			if kconf == nil {
 				log.Fatalf("kernel `%s` not found", kname)
 			}
 
-			err = kcfg.Build(context.Background(), log, dirName)
+			kURL, err := kernels.ParseURL(kconf.URL)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = kURL.Fetch(context.Background(), log, dirName, kconf.Name)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = kconf.Build(context.Background(), log, dirName)
 			if err != nil {
 				log.Fatal(err)
 			}
