@@ -88,6 +88,10 @@ func (gu *GitURL) Fetch(
 	id string,
 ) error {
 
+	if err := CheckEnvironment(); err != nil {
+		return err
+	}
+
 	if id == MainGitDir {
 		return fmt.Errorf("id `%s` is not allowed. Please use another.", id)
 	}

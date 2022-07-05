@@ -23,7 +23,7 @@ func gitAddWorkdir(ctx context.Context, log *logrus.Logger, arg *gitAddWorkdirAr
 		"remote", "add",
 		"-f", "-t", arg.remoteBranch, arg.remoteName, arg.remoteRepo,
 	}
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "git", remoteAddArgs...); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, GitBinary, remoteAddArgs...); err != nil {
 		return err
 	}
 
@@ -36,7 +36,7 @@ func gitAddWorkdir(ctx context.Context, log *logrus.Logger, arg *gitAddWorkdirAr
 		fmt.Sprintf("%s/%s", arg.remoteName, arg.remoteBranch),
 	}
 
-	return logcmd.RunAndLogCmdContext(ctx, log, "git", worktreeAddArgs...)
+	return logcmd.RunAndLogCmdContext(ctx, log, GitBinary, worktreeAddArgs...)
 }
 
 type gitRemoveWorkdirArg struct {
@@ -53,7 +53,7 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		"worktree", "remove",
 		arg.workDir,
 	}
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "git", worktreeRemoveArgs...); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, GitBinary, worktreeRemoveArgs...); err != nil {
 		log.WithError(err).Warn("did not remove worktree")
 	}
 
@@ -62,7 +62,7 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		"remote", "remove",
 		arg.remoteName,
 	}
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "git", remoteRemoveArgs...); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, GitBinary, remoteRemoveArgs...); err != nil {
 		log.WithError(err).Warn("did not remove remote")
 	}
 
@@ -71,7 +71,7 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		"branch", "--delete", "--force",
 		arg.localBranch,
 	}
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "git", branchRemoveArgs...); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, GitBinary, branchRemoveArgs...); err != nil {
 		log.WithError(err).Warn("did not remove local branch")
 	}
 }

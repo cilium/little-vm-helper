@@ -115,7 +115,7 @@ func (kc *KernelConf) AddGroups(gs ...string) error {
 
 func (kc *KernelConf) Configure(ctx context.Context, log *logrus.Logger, dir string) error {
 	srcDir := filepath.Join(dir, kc.Name)
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "defconfig", "prepare"); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "defconfig", "prepare"); err != nil {
 		return err
 	}
 
@@ -130,6 +130,10 @@ func (kc *KernelConf) Configure(ctx context.Context, log *logrus.Logger, dir str
 }
 
 func (kc *KernelConf) Build(ctx context.Context, log *logrus.Logger, dir string) error {
+	if err := CheckEnvironment(); err != nil {
+		return err
+	}
+
 	srcDir := filepath.Join(dir, kc.Name)
 	configFname := filepath.Join(srcDir, ".config")
 
@@ -144,11 +148,11 @@ func (kc *KernelConf) Build(ctx context.Context, log *logrus.Logger, dir string)
 	}
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
 		return fmt.Errorf("buiding bzImage failed: %w", err)
 	}
 
-	if err := logcmd.RunAndLogCmdContext(ctx, log, "make", "-C", srcDir, "dir-pkg"); err != nil {
+	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "dir-pkg"); err != nil {
 		return fmt.Errorf("build dir failed: %w", err)
 	}
 
