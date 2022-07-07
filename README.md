@@ -53,8 +53,8 @@ For an example script, see [scripts/example.sh](scripts/example.sh)
 Build example images:
 ```
 $ mkdir -p _data/images
-$ go run cmd/little-vm-helper example-config > _data/images/conf.json
-$ go run cmd/little-vm-helper build-images --dir _data/images
+$ go run cmd/lvh images example-config > _data/images/conf.json
+% go run cmd/lvh images build --dir _data/images
 ```
 
 The first command will create a configuration file:
