@@ -170,7 +170,13 @@ Or, even:
 qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic
 ```
 
+**Note**: Building images and kernels is only supported on Linux. On the other hand, images and kernels already build on Linux can be booted in MacOS (both x86 and Arm). The only requirement is ```qemu-system-x86_64```. As MacOS does not support KVM, the commands to boot images are:
 
+```
+$ qemu-system-x86_64 -m 4G -hda _data/images/base.img -nographic -kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage  -append "root=/dev/sda console=ttyS0"
+$ # or
+$ qemu-system-x86_64 -m 4G -hda _data/images/base.img -nographic
+```
 
 ## Notes
 
