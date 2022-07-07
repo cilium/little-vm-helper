@@ -54,7 +54,7 @@ Build example images:
 ```
 $ mkdir -p _data/images
 $ go run cmd/lvh images example-config > _data/images/conf.json
-% go run cmd/lvh images build --dir _data/images
+$ go run cmd/lvh images build --dir _data/images # this may require sudo as relies on /dev/kvm
 ```
 
 The first command will create a configuration file:
