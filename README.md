@@ -51,14 +51,14 @@ For an example script, see [scripts/example.sh](scripts/example.sh)
 ### Images
 
 Build example images:
-```
+```bash
 $ mkdir -p _data/images
 $ go run cmd/lvh images example-config > _data/images/conf.json
 $ go run cmd/lvh images build --dir _data/images # this may require sudo as relies on /dev/kvm
 ```
 
 The first command will create a configuration file:
-```
+```json
 jq . < _data/images/conf.json 
 [
   {
@@ -101,7 +101,7 @@ The configuration file includes:
 After the `build-images` command completes, there will be two images in the images directory. Note
 that the images are stored as sparse files so they take less space:
 
-```
+```bash
 $ ls -sh1 _data/images/*.img
 341M _data/images/base.img
 1.2G _data/images/k8s.img
@@ -110,7 +110,7 @@ $ ls -sh1 _data/images/*.img
 
 ### Kernels
 
-```
+```bash
 $ mkdir -p _data/kernels
 $ go run cmd/lvh kernels --dir _data/kernels init
 $ go run cmd/lvh kernels --dir _data/kernels add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
@@ -118,7 +118,7 @@ $ go run cmd/lvh kernels --dir _data/kernels build bpf-next
 ```
 
 The configuration file keeps the url for a kernel, togther with its configuration options:
-```
+```json
 $ jq . < _data/kernels/conf.json  
 {
   "kernels": [
@@ -130,7 +130,7 @@ $ jq . < _data/kernels/conf.json
           "--enable",
           "CONFIG_LOCALVERSION_AUTO"
         ],
-	... more options ...
+	    [ ... more options ... ],
         [
           "--disable",
           "CONFIG_SOUND"
@@ -146,7 +146,7 @@ git bare directory (`git`) that holds all the objects, and one worktree per kern
 efficient fetching and, also, having each kernel on its own seperate directory.
 
 For example:
-```
+```bash
 $ ls -1 _data/kernels 
 5.18/
 bpf-next/
@@ -160,21 +160,21 @@ Currently, kernels are built using the `bzImage` and `dir-pkg` targets (see [pkg
 
 The goal is to have some wrappers for running qemu, but until then, here is an example:
 
-```
+```bash
 qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic -kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage  -append "root=/dev/sda console=ttyS0"
 ```
 
 Or, even:
 
-```
+```bash
 qemu-system-x86_64 -enable-kvm -m 4G -hda _data/images/base.img -nographic
 ```
 
 **Note**: Building images and kernels is only supported on Linux. On the other hand, images and kernels already build on Linux can be booted in MacOS (both x86 and Arm). The only requirement is ```qemu-system-x86_64```. As MacOS does not support KVM, the commands to boot images are:
 
-```
+```bash
 $ qemu-system-x86_64 -m 4G -hda _data/images/base.img -nographic -kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage  -append "root=/dev/sda console=ttyS0"
-$ # or
+$ # Or:
 $ qemu-system-x86_64 -m 4G -hda _data/images/base.img -nographic
 ```
 
