@@ -20,6 +20,8 @@ It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.
  - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
  - [ ] improve boot time: minimal init, use qemu microvm (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html, https://mergeboard.com/blog/2-qemu-microvm-docker/)
  - [ ] images: on a failed run, save everything in a image-failed-$(date) directory
+ - [ ] use `guestfish --listen` (see
+   https://github.com/libbpf/ci/blob/cbb3b92facbad705bbb619b496d0debb4b3d806f/prepare-rootfs/run.sh#L345)
 
 ## FAQ
 
