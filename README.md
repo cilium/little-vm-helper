@@ -35,7 +35,7 @@ longer lifetimes than a single use, and use facilities that introduce unnecessar
 Also, packer does not seem to have a way to provision images without booting a
 machine. There is an outdated chroot package
 https://github.com/summerwind/packer-builder-qemu-chroot, and cloud chroot builders
-(e.g., https://www.packer.io/plugins/builders/amazon/chroot).
+(e.g., https://www.packer.io/plugins/builders/amazon/chroot that uses https://github.com/hashicorp/packer-plugin-sdk/tree/main/chroot).
 
 That being said, if we need packer functionality we can create a packer plugin
 (https://www.packer.io/docs/plugins/creation#developing-plugins).
