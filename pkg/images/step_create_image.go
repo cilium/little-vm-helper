@@ -37,7 +37,7 @@ var (
 //    enough, so decided to keep things simple. Note that we can use virt-sparsify if we want to (e.g.,
 //    when downloading images).
 
-// CreateImage is a step for creating an image. It's cleanup will delete it if DelImageIfExists is set.
+// CreateImage is a step for creating an image. Its cleanup will delete the image if DelImageIfExists is set.
 
 type CreateImage struct {
 	*StepConf
