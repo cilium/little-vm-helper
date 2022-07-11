@@ -58,7 +58,7 @@ $ go run cmd/lvh images build --dir _data/images # this may require sudo as reli
 ```
 
 The first command will create a configuration file:
-```json
+```jsonc
 jq . < _data/images/conf.json 
 [
   {
@@ -118,7 +118,7 @@ $ go run cmd/lvh kernels --dir _data/kernels build bpf-next
 ```
 
 The configuration file keeps the url for a kernel, togther with its configuration options:
-```json
+```jsonc
 $ jq . < _data/kernels/conf.json  
 {
   "kernels": [
