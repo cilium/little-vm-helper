@@ -21,7 +21,7 @@ func configureCommand() *cobra.Command {
 			}
 
 			kname := args[0]
-			if err := kd.ConfigureKernel(context.Background(), log, dirName, kname); err != nil {
+			if err := kd.ConfigureKernel(context.Background(), log, kname); err != nil {
 				log.Fatal(err)
 			}
 

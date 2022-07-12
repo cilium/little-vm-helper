@@ -11,6 +11,7 @@ func KernelsCommand() *cobra.Command {
 		Use:   "kernels",
 		Short: "build kernels",
 	}
+
 	cmd.PersistentFlags().StringVar(&dirName, "dir", "", "directory to to place kernels")
 	cmd.MarkPersistentFlagRequired("dir")
 

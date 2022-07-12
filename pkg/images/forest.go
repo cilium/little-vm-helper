@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 // we organize images in a forest, i.e., a set of trees
 
 // ImageForest is a set of images forming a forest (i.e., a set of trees)
 type ImageForest struct {
-	imageDir string
-	confs    map[string]*ImgConf
-	children map[string][]string
+	imagesDir string
+	confs     map[string]*ImgConf
+	children  map[string][]string
 }
 
 // NewImageForest creates a new image builder
@@ -47,7 +48,8 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 		children[parent] = append(children[parent], child)
 	}
 
-	err := os.MkdirAll(conf.Dir, 0755)
+	imagesDir := filepath.Join(conf.Dir, DefaultImagesDir)
+	err := os.MkdirAll(imagesDir, 0755)
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
@@ -64,9 +66,9 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 	}
 
 	return &ImageForest{
-		imageDir: conf.Dir,
-		confs:    confs,
-		children: children,
+		imagesDir: imagesDir,
+		confs:     confs,
+		children:  children,
 	}, nil
 }
 
@@ -80,7 +82,7 @@ func (f *ImageForest) ImageFilenamePrefix(image string) (string, error) {
 }
 
 func (f *ImageForest) imageFilenamePrefix(image string) string {
-	return path.Join(f.imageDir, image)
+	return path.Join(f.imagesDir, image)
 }
 
 // getDependencies returns the dependencies of an image, i.e., what images need to be build before it

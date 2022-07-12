@@ -56,21 +56,12 @@ func addCommand() *cobra.Command {
 				return
 			}
 
-			err := kernels.AddKernel(log, dirName, &kconf, backupConf)
+			err := kernels.AddKernel(context.Background(), log, dirName, &kconf, kernels.AddKernelFlags{
+				BackupConf: backupConf,
+				Fetch:      addFetch,
+			})
 			if err != nil {
 				log.Fatal(err)
-			}
-
-			kURL, err := kernels.ParseURL(kconf.URL)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if addFetch {
-				err := kURL.Fetch(context.Background(), log, dirName, kconf.Name)
-				if err != nil {
-					log.Fatal(err)
-				}
 			}
 
 		},

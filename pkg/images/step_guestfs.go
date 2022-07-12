@@ -21,7 +21,7 @@ type VirtCustomizeStep struct {
 }
 
 func (s *VirtCustomizeStep) Run(ctx context.Context, b multistep.StateBag) multistep.StepAction {
-	imgFname := path.Join(s.imageDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
+	imgFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
 	args := []string{"-a", imgFname}
 	args = append(args, s.Args...)
 	cmd := exec.CommandContext(ctx, "virt-customize", args...)

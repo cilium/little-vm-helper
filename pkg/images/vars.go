@@ -15,7 +15,8 @@ var (
 		GuestFish,
 	}
 
-	DefaultConfFile  = "conf.json"
+	DefaultImagesDir = "images"
+	DefaultConfFile  = "images.json"
 	DefaultImageExt  = "img"
 	DefaultImageSize = "8G"
 )

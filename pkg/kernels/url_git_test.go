@@ -138,11 +138,11 @@ func TestGitFetch(t *testing.T) {
 	t.Logf("git test repository: %s\n", gitRepoDir)
 	dir, err := os.MkdirTemp("", "git-test-dir-")
 	assert.Nil(t, err)
-	t.Logf("git test repository: %s\n", dir)
+	t.Logf("git test directory: %s\n", dir)
 
 	// src1: only file1 exists
 	gu1 := newGitURL(gitRepoDir, "")
-	err = gu1.Fetch(context.Background(), log, dir, "src1")
+	err = gu1.fetch(context.Background(), log, dir, "src1")
 	assert.Nil(t, err)
 	isReg, err := regularFileExists(filepath.Join(dir, "src1", "file1"))
 	assert.Nil(t, err)
@@ -153,7 +153,7 @@ func TestGitFetch(t *testing.T) {
 
 	// src2: only file1 and file2 exist
 	gu2 := newGitURL(gitRepoDir, "branch")
-	err = gu2.Fetch(context.Background(), log, dir, "src2")
+	err = gu2.fetch(context.Background(), log, dir, "src2")
 	assert.Nil(t, err)
 	isReg, err = regularFileExists(filepath.Join(dir, "src2", "file1"))
 	assert.Nil(t, err)
@@ -165,7 +165,7 @@ func TestGitFetch(t *testing.T) {
 	// src1: only file1 exists
 	// TODO: modify the repository by removing file1 and test again
 	gu1 = newGitURL(gitRepoDir, "")
-	err = gu1.Fetch(context.Background(), log, dir, "src1")
+	err = gu1.fetch(context.Background(), log, dir, "src1")
 	assert.Nil(t, err)
 	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file1"))
 	assert.Nil(t, err)

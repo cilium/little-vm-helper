@@ -12,10 +12,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// NB: we use the same git directory for all remotes so that we can speed up downloads.
-// The name of the Provided by the user is used as the remote name. This means
-// that we might end up with the same remote on different names, but that's
-// fine.
+// NB: we use the same git directory for all remotes so that we can speed up
+// downloads.  The name of the kernel as provided by the user is used as the
+// remote name. This means that we might end up with the same remote on
+// different names, but that's fine.
 var MainGitDir = "git"
 
 type GitURL struct {
@@ -28,7 +28,7 @@ type GitURL struct {
 func NewGitURL(kurl *url.URL) (KernelURL, error) {
 	// NB: far from perfect, but works for the simple cases
 	repo := fmt.Sprintf("%s://%s%s", kurl.Scheme, kurl.Host, kurl.Path)
-	// NB: we (ab)use the fragment part of the URL to get the branch
+	// NB: we (ab)use the fragment part of the URL to store the branch
 	branch := kurl.Fragment
 	return newGitURL(repo, branch), nil
 }
@@ -79,9 +79,9 @@ func makeGitDir(ctx context.Context, log *logrus.Logger, gitDir string) error {
 	return nil
 }
 
-// Fetch will fetches the code pointed by gu, into dir/id
+// fetch will fetches the code pointed by gu, into dir/id
 // It uses a
-func (gu *GitURL) Fetch(
+func (gu *GitURL) fetch(
 	ctx context.Context,
 	log *logrus.Logger,
 	dir string,
@@ -97,7 +97,7 @@ func (gu *GitURL) Fetch(
 	}
 
 	// directories are
-	// <dir>/<MainGitDir>.git ->  git repo
+	// <dir>/<MainGitDir> ->  git repo
 	// <dir>/<id> -> one worktree per id
 	gitDir := filepath.Join(dir, MainGitDir)
 	idDir := filepath.Join(dir, id)
@@ -117,7 +117,7 @@ func (gu *GitURL) Fetch(
 	}
 
 	return gitAddWorkdir(ctx, log, &gitAddWorkdirArg{
-		workDir:      filepath.Join(dir, id),
+		workDir:      idDir,
 		bareDir:      gitDir,
 		remoteName:   id,
 		remoteRepo:   gu.Repo,

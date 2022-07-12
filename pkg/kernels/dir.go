@@ -38,16 +38,16 @@ func (kd *KernelsDir) RemoveKernelConfig(name string) *KernelConf {
 	return nil
 }
 
-func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, dir, kernName string) error {
+func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, kernName string) error {
 	kc := kd.KernelConfig(kernName)
 	if kc == nil {
 		return fmt.Errorf("kernel '%s' not found", kernName)
 	}
-	return kd.configureKernel(ctx, log, dir, kc)
+	return kd.configureKernel(ctx, log, kc)
 }
 
-func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, dir string, kc *KernelConf) error {
-	srcDir := filepath.Join(dir, kc.Name)
+func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
+	srcDir := filepath.Join(kd.Dir, kc.Name)
 
 	oldPath, err := os.Getwd()
 	if err != nil {
@@ -87,19 +87,19 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, d
 	return nil
 }
 
-func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, dir string, kc *KernelConf) error {
+func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
 	if err := CheckEnvironment(); err != nil {
 		return err
 	}
 
-	srcDir := filepath.Join(dir, kc.Name)
+	srcDir := filepath.Join(kd.Dir, kc.Name)
 	configFname := filepath.Join(srcDir, ".config")
 
 	if exists, err := regularFileExists(configFname); err != nil {
 		return err
 	} else if !exists {
 		log.Info("Configuring kernel")
-		err = kd.configureKernel(ctx, log, dir, kc)
+		err = kd.configureKernel(ctx, log, kc)
 		if err != nil {
 			return fmt.Errorf("failed to configure kernel: %w", err)
 		}

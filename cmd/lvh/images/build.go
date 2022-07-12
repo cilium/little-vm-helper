@@ -13,7 +13,7 @@ import (
 )
 
 func BuildCmd() *cobra.Command {
-	var configFname, dirName string
+	var dirName string
 	var forceRebuild, dryRun bool
 
 	cmd := &cobra.Command{
@@ -21,9 +21,7 @@ func BuildCmd() *cobra.Command {
 		Short: "Build VM images",
 		Run: func(cmd *cobra.Command, _ []string) {
 			log := logrus.New()
-			if configFname == "" {
-				configFname = path.Join(dirName, images.DefaultConfFile)
-			}
+			configFname := path.Join(dirName, images.DefaultConfFile)
 
 			configData, err := os.ReadFile(configFname)
 			if err != nil {
@@ -63,12 +61,9 @@ func BuildCmd() *cobra.Command {
 			}
 		},
 	}
-	cmd.Flags().StringVar(&dirName, "dir", "", "directory  to place images")
+
+	cmd.Flags().StringVar(&dirName, "dir", "", "directory to keep the images (configuration will be saved in <dir>/images.json and images in <dir>/images)")
 	cmd.MarkFlagRequired("dir")
-	cmd.Flags().StringVar(&configFname,
-		"config", "",
-		fmt.Sprintf("config file (default is <dir>/%s)", images.DefaultConfFile),
-	)
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
 	return cmd

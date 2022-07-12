@@ -65,7 +65,7 @@ append initrd=initrd.img root=/dev/sda rw console=ttyS0
 `
 
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
-	tarFname := path.Join(s.imageDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
+	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
 
 	// build package list: add a kernel if building a bootable image
 	packages := make([]string, 0, len(s.imgCnf.Packages)+1)
@@ -90,7 +90,7 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 		}
 	}()
 
-	imgFname := path.Join(s.imageDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
+	imgFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
 	// example: guestfish -N foo.img=disk:8G -- mkfs ext4 /dev/sda : mount /dev/sda / : tar-in /tmp/foo.tar /
 	if s.bootable {
 		dirname, err := os.MkdirTemp("", "extlinux-")
@@ -137,8 +137,8 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 }
 
 func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
-	parFname := path.Join(s.imageDir, fmt.Sprintf("%s.img", s.imgCnf.Parent))
-	imgFname := path.Join(s.imageDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
+	parFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Parent))
+	imgFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
 
 	// NB: cp has detection for sparse files, so just use that for now
 	// -n: don't override.

@@ -11,7 +11,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var ConfigFname = "conf.json"
+var (
+	ConfigFname    = "kernels.json"
+	KernelsDirName = "kernels"
+)
 
 type InitDirFlags struct {
 	Force      bool
@@ -30,7 +33,7 @@ func InitDir(log *logrus.Logger, dir string, conf *Conf, flags InitDirFlags) err
 	confFname := path.Join(dir, ConfigFname)
 	if !flags.Force {
 		if _, err := os.Stat(confFname); err == nil {
-			return fmt.Errorf("config file `%s` already exists", dir)
+			return fmt.Errorf("config file `%s` already exists", confFname)
 		}
 	}
 
@@ -51,15 +54,20 @@ func LoadDir(dir string) (*KernelsDir, error) {
 		return nil, err
 	}
 
-	ks := KernelsDir{Dir: dir}
-	err = json.Unmarshal(data, &ks.Conf)
+	kd := KernelsDir{Dir: filepath.Join(dir, KernelsDirName)}
+	err = json.Unmarshal(data, &kd.Conf)
 	if err != nil {
 		return nil, err
 	}
-	return &ks, nil
+	return &kd, nil
 }
 
-func AddKernel(log *logrus.Logger, dir string, cnf *KernelConf, backupConf bool) error {
+type AddKernelFlags struct {
+	BackupConf bool
+	Fetch      bool
+}
+
+func AddKernel(ctx context.Context, log *logrus.Logger, dir string, cnf *KernelConf, flags AddKernelFlags) error {
 	kd, err := LoadDir(dir)
 	if err != nil {
 		return err
@@ -70,7 +78,22 @@ func AddKernel(log *logrus.Logger, dir string, cnf *KernelConf, backupConf bool)
 	}
 
 	kd.Conf.Kernels = append(kd.Conf.Kernels, *cnf)
-	return kd.Conf.SaveTo(log, dir, backupConf)
+	if err := kd.Conf.SaveTo(log, dir, flags.BackupConf); err != nil {
+		return err
+	}
+
+	if flags.Fetch {
+		kURL, err := ParseURL(cnf.URL)
+		if err != nil {
+			return err
+		}
+
+		if err := kURL.fetch(ctx, log, kd.Dir, cnf.Name); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name string, backupConf bool) error {
@@ -87,7 +110,7 @@ func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name stri
 
 	gitRemoveWorkdir(ctx, log, &gitRemoveWorkdirArg{
 		workDir:     name,
-		bareDir:     filepath.Join(dir, MainGitDir),
+		bareDir:     filepath.Join(kd.Dir, MainGitDir),
 		remoteName:  name,
 		localBranch: fmt.Sprintf("lvh-%s", name),
 	})
@@ -111,11 +134,11 @@ func BuildKernel(ctx context.Context, log *logrus.Logger, dir, kname string) err
 		return err
 	}
 
-	err = kURL.Fetch(context.Background(), log, dir, kconf.Name)
+	err = kURL.fetch(context.Background(), log, kd.Dir, kconf.Name)
 	if err != nil {
 		return err
 		log.Fatal(err)
 	}
 
-	return kd.buildKernel(context.Background(), log, dir, kconf)
+	return kd.buildKernel(context.Background(), log, kconf)
 }

@@ -31,9 +31,9 @@ func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, imag
 	}
 
 	stepConf := &StepConf{
-		imageDir: f.imageDir,
-		imgCnf:   cnf,
-		log:      log,
+		imagesDir: f.imagesDir,
+		imgCnf:    cnf,
+		log:       log,
 	}
 
 	state := new(multistep.BasicStateBag)
@@ -47,7 +47,7 @@ func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, imag
 	runner.Run(ctx, state)
 	err := state.Get("err")
 	if err != nil {
-		imgFname := path.Join(f.imageDir, fmt.Sprintf("%s.%s", cnf.Name, DefaultImageExt))
+		imgFname := path.Join(f.imagesDir, fmt.Sprintf("%s.%s", cnf.Name, DefaultImageExt))
 		log.Warnf("image file '%s' left for inspection", imgFname)
 		return err.(error)
 	}

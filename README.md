@@ -54,14 +54,14 @@ For an example script, see [scripts/example.sh](scripts/example.sh)
 
 Build example images:
 ```bash
-$ mkdir -p _data/images
-$ go run cmd/lvh images example-config > _data/images/conf.json
+$ mkdir _data
+$ go run cmd/lvh images example-config > _data/images.json
 $ go run cmd/lvh images build --dir _data/images # this may require sudo as relies on /dev/kvm
 ```
 
 The first command will create a configuration file:
 ```jsonc
-jq . < _data/images/conf.json 
+jq . < _data/images.json
 [
   {
     "name": "base",
@@ -105,43 +105,41 @@ that the images are stored as sparse files so they take less space:
 
 ```bash
 $ ls -sh1 _data/images/*.img
-341M _data/images/base.img
-1.2G _data/images/k8s.img
+856M _data/images/base.img
+1.7G _data/images/k8s.img
 ```
-
 
 ### Kernels
 
 ```bash
 $ mkdir -p _data/kernels
-$ go run cmd/lvh kernels --dir _data/kernels init
-$ go run cmd/lvh kernels --dir _data/kernels add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
-$ go run cmd/lvh kernels --dir _data/kernels build bpf-next
+$ go run cmd/lvh kernels --dir _data init
+$ go run cmd/lvh kernels --dir _data add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
+$ go run cmd/lvh kernels --dir _datas build bpf-next
 ```
 
 The configuration file keeps the url for a kernel, togther with its configuration options:
 ```jsonc
-$ jq . < _data/kernels/conf.json  
+$ jq . < _data/kernel.json
 {
   "kernels": [
     {
       "name": "bpf-next",
-      "url": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
-      "opts": [
-        [
-          "--enable",
-          "CONFIG_LOCALVERSION_AUTO"
-        ],
-	    [ ... more options ... ],
-        [
-          "--disable",
-          "CONFIG_SOUND"
-        ]
-      ]
-    },
+      "url": "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git"
+    }
+  ],
+  "common_opts": [
+    [
+      "--enable",
+      "CONFIG_LOCALVERSION_AUTO"
+    ],
+     ... more options ...
   ]
 }
 ```
+
+There are options that are applied to all kernels (`common_opts`) as well as
+kernel-specific options.
 
 The kernels are kept in [worktrees](https://git-scm.com/docs/git-worktree). Specifically, There is a
 git bare directory (`git`) that holds all the objects, and one worktree per kernel. This allows
@@ -149,10 +147,9 @@ efficient fetching and, also, having each kernel on its own seperate directory.
 
 For example:
 ```bash
-$ ls -1 _data/kernels 
+$ ls -1 _data/kernels
 5.18/
 bpf-next/
-conf.json
 git/
 ```
 
