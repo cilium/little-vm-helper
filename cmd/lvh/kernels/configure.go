@@ -21,13 +21,7 @@ func configureCommand() *cobra.Command {
 			}
 
 			kname := args[0]
-			kcfg := kd.KernelConfig(kname)
-			if kcfg == nil {
-				log.Fatalf("kernel `%s` not found", kname)
-			}
-
-			err = kcfg.Configure(context.Background(), log, dirName)
-			if err != nil {
+			if err := kd.ConfigureKernel(context.Background(), log, dirName, kname); err != nil {
 				log.Fatal(err)
 			}
 

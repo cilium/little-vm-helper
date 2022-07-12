@@ -24,9 +24,9 @@ func addCommand() *cobra.Command {
 	}
 
 	var addConfigGroups []string
-	var addPrintConfig, addFetch bool
+	var addPrintConfig, addFetch, backupConf bool
 	addCmd := &cobra.Command{
-		Use:     "add <name> <url> (e.g., add bpf-next )",
+		Use:     "add <name> <url>",
 		Short:   "add kernel (by updating config file in directory)",
 		Example: addExamples(),
 		Args:    cobra.ExactArgs(2),
@@ -36,9 +36,10 @@ func addCommand() *cobra.Command {
 			kconf := kernels.KernelConf{
 				Name: args[0],
 				URL:  args[1],
+				Opts: make([]kernels.ConfigOption, 0),
 			}
 
-			if err := kconf.AddGroups(addConfigGroups...); err != nil {
+			if err := kconf.AddGroupsOpts(addConfigGroups...); err != nil {
 				log.Fatal(err)
 			}
 
@@ -55,7 +56,7 @@ func addCommand() *cobra.Command {
 				return
 			}
 
-			err := kernels.AddKernel(log, dirName, &kconf)
+			err := kernels.AddKernel(log, dirName, &kconf, backupConf)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -76,7 +77,7 @@ func addCommand() *cobra.Command {
 	}
 	addCmd.Flags().StringSliceVar(
 		&addConfigGroups,
-		"config-groups", kernels.DefaultConfigGroups,
+		"config-groups", []string{},
 		fmt.Sprintf(
 			"add configuration options based on the following predefined groups: %s",
 			strings.Join(kernels.GetConfigGroupNames(), ","),
@@ -84,5 +85,6 @@ func addCommand() *cobra.Command {
 	)
 	addCmd.Flags().BoolVar(&addPrintConfig, "just-print-config", false, "do not actually add the kernel. Just print its config.")
 	addCmd.Flags().BoolVar(&addFetch, "fetch", false, "fetch URL")
+	addCmd.Flags().BoolVar(&backupConf, "backup-conf", false, "backup configuration")
 	return addCmd
 }

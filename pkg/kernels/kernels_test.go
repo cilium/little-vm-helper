@@ -7,10 +7,22 @@ import (
 	"path"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
+type testLogger struct {
+	*testing.T
+}
+
+func (tl testLogger) Write(p []byte) (n int, err error) {
+	tl.Logf((string)(p))
+	return len(p), nil
+}
+
 func TestInitDir(t *testing.T) {
+	xlog := logrus.New()
+	xlog.SetOutput(testLogger{t})
 	configs := []*Conf{
 		nil,
 		{
@@ -18,7 +30,7 @@ func TestInitDir(t *testing.T) {
 				{
 					Name: "bpf-next",
 					URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
-					Conf: []ConfigOption{
+					Opts: []ConfigOption{
 						{"--enable", "CONFIG_DEBUG_INFO"},
 						{"--disable", "CONFIG_DEBUG_KERNEL"},
 						{"--enable CONFIG_BPF"},
@@ -27,7 +39,7 @@ func TestInitDir(t *testing.T) {
 				}, {
 					Name: "5.18.8",
 					URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#v5.18.8",
-					Conf: []ConfigOption{
+					Opts: []ConfigOption{
 						{"--enable", "CONFIG_DEBUG_INFO"},
 						{"--disable", "CONFIG_DEBUG_KERNEL"},
 						{"--enable CONFIG_BPF"},
@@ -44,7 +56,7 @@ func TestInitDir(t *testing.T) {
 			dir, err := ioutil.TempDir("", "test_kernel")
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
-			err = InitDir(dir, conf)
+			err = InitDir(xlog, dir, conf, InitDirFlags{Force: false, BackupConf: false})
 			assert.Nil(t, err)
 
 			if conf == nil {

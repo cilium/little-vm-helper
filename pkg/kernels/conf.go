@@ -1,16 +1,12 @@
 package kernels
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
-	"runtime"
 	"time"
 
-	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/sirupsen/logrus"
 )
 
@@ -23,11 +19,31 @@ type KernelConf struct {
 	// URL of the kernel source
 	URL string `json:"url"`
 	// config options
-	Conf []ConfigOption `json:"opts"`
+	Opts []ConfigOption `json:"opts,omitempty"`
 }
 
 type Conf struct {
-	Kernels []KernelConf `json:"kernels"`
+	Kernels    []KernelConf   `json:"kernels"`
+	CommonOpts []ConfigOption `json:"common_opts,omitempty"`
+}
+
+func confAddGroups(opts []ConfigOption, gs ...string) ([]ConfigOption, error) {
+	newOpts := make([]ConfigOption, 0)
+	for _, g := range gs {
+		nopts, ok := ConfigOptGroups[g]
+		if !ok {
+			return nil, fmt.Errorf("unknown group %s", g)
+		}
+		for _, opt := range nopts {
+			newOpts = append(newOpts, opt)
+		}
+	}
+
+	for _, opt := range newOpts {
+		opts = append(opts, opt)
+	}
+
+	return opts, nil
 }
 
 var ConfigOptGroups = map[string][]ConfigOption{
@@ -46,6 +62,11 @@ var ConfigOptGroups = map[string][]ConfigOption{
 		{"--disable", "CONFIG_RFKILL"},
 		{"--disable", "CONFIG_MACINTOSH_DRIVERS"},
 		{"--disable", "CONFIG_SOUND"},
+		{"--disable", "CONFIG_AGP"},
+		{"--disable", "CONFIG_USB_SUPPORT"},
+		{"--disable", "CONFIG_USB"},
+		{"--disable", "CONFIG_WLAN"},
+		{"--disable", "CONFIG_HID"},
 	},
 	"bpf": []ConfigOption{
 		{"--enable", "CONFIG_BPF"},
@@ -75,22 +96,24 @@ func GetConfigGroupNames() []string {
 	return ret
 }
 
-func (cnf *Conf) SaveTo(log *logrus.Logger, dir string) error {
+func (cnf *Conf) SaveTo(log *logrus.Logger, dir string, backup bool) error {
 	fname := path.Join(dir, ConfigFname)
 	confb, err := json.MarshalIndent(cnf, "", "    ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	// rename file if it exists
-	if ok, _ := regularFileExists(fname); ok {
-		dateStr := time.Now().Format("20060102.150405000000")
-		fnameOld := fmt.Sprintf("%s.%s", fname, dateStr)
-		err := os.Rename(fname, fnameOld)
-		if err != nil {
-			log.Info("failed to rename %s to %s", fname, fnameOld)
-		} else {
-			log.Info("renamed %s to %s", fname, fnameOld)
+	if backup {
+		// rename configuration file if it exists
+		if ok, _ := regularFileExists(fname); ok {
+			dateStr := time.Now().Format("20060102.150405000000")
+			fnameOld := fmt.Sprintf("%s.%s", fname, dateStr)
+			err := os.Rename(fname, fnameOld)
+			if err != nil {
+				log.Infof("failed to rename %s to %s", fname, fnameOld)
+			} else {
+				log.Infof("renamed %s to %s", fname, fnameOld)
+			}
 		}
 	}
 
@@ -107,68 +130,20 @@ func (kc *KernelConf) Validate() error {
 	return err
 }
 
-func (kc *KernelConf) AddGroups(gs ...string) error {
-	newOpts := make([]ConfigOption, 0)
-
-	for _, g := range gs {
-		opts, ok := ConfigOptGroups[g]
-		if !ok {
-			return fmt.Errorf("unknown group %s", g)
-		}
-		for _, opt := range opts {
-			newOpts = append(newOpts, opt)
-		}
+func (kc *KernelConf) AddGroupsOpts(gs ...string) error {
+	opts, err := confAddGroups(kc.Opts, gs...)
+	if err != nil {
+		return err
 	}
-
-	for _, opt := range newOpts {
-		kc.Conf = append(kc.Conf, opt)
-	}
-
+	kc.Opts = opts
 	return nil
 }
 
-func (kc *KernelConf) Configure(ctx context.Context, log *logrus.Logger, dir string) error {
-	srcDir := filepath.Join(dir, kc.Name)
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "defconfig", "prepare"); err != nil {
+func (c *Conf) AddGroupsCommonOpts(gs ...string) error {
+	opts, err := confAddGroups(c.CommonOpts, gs...)
+	if err != nil {
 		return err
 	}
-
-	configCmd := filepath.Join(dir, kc.Name, "scripts", "config")
-	for _, opts := range kc.Conf {
-		if err := logcmd.RunAndLogCmdContext(ctx, log, configCmd, opts...); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (kc *KernelConf) Build(ctx context.Context, log *logrus.Logger, dir string) error {
-	if err := CheckEnvironment(); err != nil {
-		return err
-	}
-
-	srcDir := filepath.Join(dir, kc.Name)
-	configFname := filepath.Join(srcDir, ".config")
-
-	if exists, err := regularFileExists(configFname); err != nil {
-		return err
-	} else if !exists {
-		log.Info("Configuring kernel")
-		err := kc.Configure(ctx, log, dir)
-		if err != nil {
-			return fmt.Errorf("failed to configure kernel: %w", err)
-		}
-	}
-
-	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
-		return fmt.Errorf("buiding bzImage failed: %w", err)
-	}
-
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "dir-pkg"); err != nil {
-		return fmt.Errorf("build dir failed: %w", err)
-	}
-
+	c.CommonOpts = opts
 	return nil
 }
