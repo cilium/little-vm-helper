@@ -55,7 +55,7 @@ func addCommand() *cobra.Command {
 				return
 			}
 
-			err := kernels.AddKernel(dirName, &kconf)
+			err := kernels.AddKernel(log, dirName, &kconf)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/sirupsen/logrus"
@@ -74,12 +75,25 @@ func GetConfigGroupNames() []string {
 	return ret
 }
 
-func (cnf *Conf) SaveTo(dir string) error {
+func (cnf *Conf) SaveTo(log *logrus.Logger, dir string) error {
 	fname := path.Join(dir, ConfigFname)
-	confb, err := json.Marshal(cnf)
+	confb, err := json.MarshalIndent(cnf, "", "    ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
+
+	// rename file if it exists
+	if ok, _ := regularFileExists(fname); ok {
+		dateStr := time.Now().Format("20060102.150405000000")
+		fnameOld := fmt.Sprintf("%s.%s", fname, dateStr)
+		err := os.Rename(fname, fnameOld)
+		if err != nil {
+			log.Info("failed to rename %s to %s", fname, fnameOld)
+		} else {
+			log.Info("renamed %s to %s", fname, fnameOld)
+		}
+	}
+
 	err = os.WriteFile(fname, confb, 0666)
 	if err != nil {
 		return fmt.Errorf("error writing configuration: %w", err)

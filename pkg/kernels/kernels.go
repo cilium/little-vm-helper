@@ -16,7 +16,7 @@ var ConfigFname = "conf.json"
 // Initalizes a new directory (it will create it if it does not exist).
 // the provided conf will be saved in the directory.
 // if conf is nil, an empty configuration will be used.
-func InitDir(dir string, conf *Conf) error {
+func InitDir(log *logrus.Logger, dir string, conf *Conf) error {
 	err := os.MkdirAll(dir, 0755)
 	if err != nil && !os.IsExist(err) {
 		return fmt.Errorf("failed to create directory '%s': %w", dir, err)
@@ -33,7 +33,7 @@ func InitDir(dir string, conf *Conf) error {
 		}
 	}
 
-	return conf.SaveTo(dir)
+	return conf.SaveTo(log, dir)
 }
 
 // Load configuration from a directory
@@ -51,7 +51,7 @@ func LoadDir(dir string) (*KernelsDir, error) {
 	return &ks, nil
 }
 
-func AddKernel(dir string, cnf *KernelConf) error {
+func AddKernel(log *logrus.Logger, dir string, cnf *KernelConf) error {
 	kd, err := LoadDir(dir)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func AddKernel(dir string, cnf *KernelConf) error {
 	}
 
 	kd.Conf.Kernels = append(kd.Conf.Kernels, *cnf)
-	return kd.Conf.SaveTo(dir)
+	return kd.Conf.SaveTo(log, dir)
 }
 
 func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name string) error {
@@ -74,7 +74,7 @@ func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name stri
 	if kd.RemoveKernelConfig(name) == nil {
 		log.Warnf("kernel `%s` does not exist in configuration", name)
 	} else {
-		defer kd.Conf.SaveTo(dir)
+		defer kd.Conf.SaveTo(log, dir)
 	}
 
 	gitRemoveWorkdir(ctx, log, &gitRemoveWorkdirArg{
