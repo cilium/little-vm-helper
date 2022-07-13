@@ -19,25 +19,25 @@ func BuildCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "Build VM images",
-		Run: func(cmd *cobra.Command, _ []string) {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			log := logrus.New()
 			configFname := path.Join(dirName, images.DefaultConfFile)
 
 			configData, err := os.ReadFile(configFname)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			var cnf images.ImagesConf
 			cnf.Dir = dirName
 			err = json.Unmarshal(configData, &cnf.Images)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			forest, err := images.NewImageForest(&cnf, false)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			start := time.Now()
@@ -48,7 +48,8 @@ func BuildCmd() *cobra.Command {
 			})
 			elapsed := time.Since(start)
 
-			if err := res.Err(); err != nil {
+			err = res.Err()
+			if err != nil {
 				log.WithError(err).Error("building images failed")
 			} else {
 				log.WithField("time-elapsed", elapsed).Info("images built succesfully")
@@ -59,6 +60,8 @@ func BuildCmd() *cobra.Command {
 					fmt.Printf("image:%-10s cachedImageUsed:%t cachedImageDeleted:%s\n", img, ir.CachedImageUsed, ir.CachedImageDeleted)
 				}
 			}
+
+			return err
 		},
 	}
 
