@@ -147,3 +147,20 @@ func (c *Conf) AddGroupsCommonOpts(gs ...string) error {
 	c.CommonOpts = opts
 	return nil
 }
+
+func (cnf *Conf) getOptions(kc *KernelConf) []ConfigOption {
+
+	ret := make([]ConfigOption, 0, len(cnf.CommonOpts)+len(kc.Opts))
+
+	// common options first
+	for _, opts := range cnf.CommonOpts {
+		ret = append(ret, opts)
+	}
+
+	// then kernel-specific options
+	for _, opts := range kc.Opts {
+		ret = append(ret, opts)
+	}
+
+	return ret
+}

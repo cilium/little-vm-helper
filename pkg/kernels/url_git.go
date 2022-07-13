@@ -122,6 +122,6 @@ func (gu *GitURL) fetch(
 		remoteName:   id,
 		remoteRepo:   gu.Repo,
 		remoteBranch: gu.Branch,
-		localBranch:  fmt.Sprintf("lvh-%s", id),
+		localBranch:  gitLocalBranch(id),
 	})
 }

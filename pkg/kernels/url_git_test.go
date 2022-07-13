@@ -127,6 +127,29 @@ func makeTestGitRepo() (string, error) {
 	return dir, nil
 }
 
+// modify master branch to also incude file3
+func modifyTestRepo(dir string) error {
+	repo, err := git.PlainOpen(dir)
+	if err != nil {
+		return err
+	}
+
+	refName := plumbing.Master
+
+	w, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	if err := w.Checkout(&git.CheckoutOptions{
+		Branch: refName,
+	}); err != nil {
+		return err
+	}
+
+	return gitAddTestFile(repo, dir, "file3")
+}
+
 func TestGitFetch(t *testing.T) {
 	log := logrus.New()
 	if !testing.Verbose() {
@@ -164,7 +187,6 @@ func TestGitFetch(t *testing.T) {
 
 	// src1: only file1 exists
 	// TODO: modify the repository by removing file1 and test again
-	gu1 = newGitURL(gitRepoDir, "")
 	err = gu1.fetch(context.Background(), log, dir, "src1")
 	assert.Nil(t, err)
 	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file1"))
@@ -173,4 +195,28 @@ func TestGitFetch(t *testing.T) {
 	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file2"))
 	assert.Nil(t, err)
 	assert.False(t, isReg)
+	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file3"))
+	assert.Nil(t, err)
+	assert.False(t, isReg)
+
+	err = modifyTestRepo(gitRepoDir)
+	assert.Nil(t, err)
+	err = gu1.fetch(context.Background(), log, dir, "src1")
+	assert.Nil(t, err)
+	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file1"))
+	assert.Nil(t, err)
+	assert.True(t, isReg)
+	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file2"))
+	assert.Nil(t, err)
+	assert.False(t, isReg)
+	isReg, err = regularFileExists(filepath.Join(dir, "src1", "file3"))
+	assert.Nil(t, err)
+	assert.True(t, isReg)
+
+	// test removing the git working directory
+	err = removeGitWorkDir(context.Background(), log, dir, "src1")
+	assert.Nil(t, err)
+	isDir, err := directoryExists(filepath.Join(dir, "src1"))
+	assert.Nil(t, err)
+	assert.False(t, isDir)
 }

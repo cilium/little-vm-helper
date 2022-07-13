@@ -1,10 +1,8 @@
 package kernels
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -20,33 +18,34 @@ func (tl testLogger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func TestInitDir(t *testing.T) {
+var (
+	testKconfs = []KernelConf{
+		{
+			Name: "bpf-next",
+			URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
+			Opts: []ConfigOption{
+				{"--enable", "CONFIG_DEBUG_INFO"},
+				{"--disable", "CONFIG_DEBUG_KERNEL"},
+			},
+		}, {
+			Name: "5.18",
+			URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#linux-5.18.y",
+			Opts: []ConfigOption{
+				{"--enable CONFIG_BPF"},
+				{"--enable CONFIG_BPF_SYSCALL"},
+			},
+		},
+	}
+)
+
+func TestDir(t *testing.T) {
 	xlog := logrus.New()
 	xlog.SetOutput(testLogger{t})
 	configs := []*Conf{
 		nil,
 		{
-			Kernels: []KernelConf{
-				{
-					Name: "bpf-next",
-					URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git",
-					Opts: []ConfigOption{
-						{"--enable", "CONFIG_DEBUG_INFO"},
-						{"--disable", "CONFIG_DEBUG_KERNEL"},
-						{"--enable CONFIG_BPF"},
-						{"--enable CONFIG_BPF_SYSCALL"},
-					},
-				}, {
-					Name: "5.18.8",
-					URL:  "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git#v5.18.8",
-					Opts: []ConfigOption{
-						{"--enable", "CONFIG_DEBUG_INFO"},
-						{"--disable", "CONFIG_DEBUG_KERNEL"},
-						{"--enable CONFIG_BPF"},
-						{"--enable CONFIG_BPF_SYSCALL"},
-					},
-				},
-			},
+			Kernels:    testKconfs,
+			CommonOpts: []ConfigOption{{"--disable", "CONFIG_WERROR"}},
 		},
 	}
 
@@ -65,13 +64,9 @@ func TestInitDir(t *testing.T) {
 				}
 			}
 
-			var xconf Conf
-			data, err := os.ReadFile(path.Join(dir, ConfigFname))
+			kd, err := LoadDir(dir)
 			assert.Nil(t, err)
-			err = json.Unmarshal(data, &xconf)
-			assert.Nil(t, err)
-			assert.Equal(t, &xconf, conf)
-
+			assert.Equal(t, &kd.Conf, conf)
 		}()
 	}
 }

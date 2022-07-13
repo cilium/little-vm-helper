@@ -64,16 +64,8 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 	}
 
 	configCmd := filepath.Join(".", "scripts", "config")
-
-	// common options first
-	for _, opts := range kd.Conf.CommonOpts {
-		if err := logcmd.RunAndLogCommandContext(ctx, log, configCmd, opts...); err != nil {
-			return err
-		}
-	}
-
-	// then kernel-specific options
-	for _, opts := range kc.Opts {
+	for _, opts := range kd.Conf.getOptions(kc) {
+		// NB: we could do this in a single command, but doing it one-by-one makes it easier to debug things
 		if err := logcmd.RunAndLogCommandContext(ctx, log, configCmd, opts...); err != nil {
 			return err
 		}

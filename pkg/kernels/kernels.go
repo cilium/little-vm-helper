@@ -21,7 +21,8 @@ type InitDirFlags struct {
 	BackupConf bool
 }
 
-// Initalizes a new directory (it will create it if it does not exist).
+// Initalizes a new directory for kernels (it will create it if it does not exist).
+//
 // the provided conf will be saved in the directory.
 // if conf is nil, an empty configuration will be used.
 func InitDir(log *logrus.Logger, dir string, conf *Conf, flags InitDirFlags) error {
@@ -108,12 +109,10 @@ func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name stri
 		defer kd.Conf.SaveTo(log, dir, backupConf)
 	}
 
-	gitRemoveWorkdir(ctx, log, &gitRemoveWorkdirArg{
-		workDir:     name,
-		bareDir:     filepath.Join(kd.Dir, MainGitDir),
-		remoteName:  name,
-		localBranch: fmt.Sprintf("lvh-%s", name),
-	})
+	err = removeGitWorkDir(ctx, log, name, kd.Dir)
+	if err != nil {
+		log.WithError(err).Warn("remove work dir encountered errors")
+	}
 
 	return nil
 }

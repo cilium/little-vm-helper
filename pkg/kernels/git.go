@@ -3,8 +3,11 @@ package kernels
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
+
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,6 +42,21 @@ func gitAddWorkdir(ctx context.Context, log *logrus.Logger, arg *gitAddWorkdirAr
 	return logcmd.RunAndLogCommandContext(ctx, log, GitBinary, worktreeAddArgs...)
 }
 
+func gitLocalBranch(kname string) string {
+	return fmt.Sprintf("lvh-%s", kname)
+}
+
+func removeGitWorkDir(ctx context.Context, log *logrus.Logger, dir, kName string) error {
+	return gitRemoveWorkdir(context.Background(), log,
+		&gitRemoveWorkdirArg{
+			workDir:     kName,
+			bareDir:     filepath.Join(dir, MainGitDir),
+			remoteName:  kName,
+			localBranch: gitLocalBranch(kName),
+		},
+	)
+}
+
 type gitRemoveWorkdirArg struct {
 	workDir     string
 	bareDir     string
@@ -46,7 +64,8 @@ type gitRemoveWorkdirArg struct {
 	localBranch string
 }
 
-func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWorkdirArg) {
+func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWorkdirArg) error {
+	var res error
 
 	worktreeRemoveArgs := []string{
 		"--git-dir", arg.bareDir,
@@ -54,7 +73,7 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		arg.workDir,
 	}
 	if err := logcmd.RunAndLogCommandContext(ctx, log, GitBinary, worktreeRemoveArgs...); err != nil {
-		log.WithError(err).Warn("did not remove worktree")
+		multierror.Append(res, fmt.Errorf("did not remove worktree: %w", err))
 	}
 
 	remoteRemoveArgs := []string{
@@ -63,7 +82,7 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		arg.remoteName,
 	}
 	if err := logcmd.RunAndLogCommandContext(ctx, log, GitBinary, remoteRemoveArgs...); err != nil {
-		log.WithError(err).Warn("did not remove remote")
+		multierror.Append(res, fmt.Errorf("did not remove remote: %w", err))
 	}
 
 	branchRemoveArgs := []string{
@@ -72,6 +91,8 @@ func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWor
 		arg.localBranch,
 	}
 	if err := logcmd.RunAndLogCommandContext(ctx, log, GitBinary, branchRemoveArgs...); err != nil {
-		log.WithError(err).Warn("did not remove local branch")
+		multierror.Append(res, fmt.Errorf("did not remove local branch: %w", err))
 	}
+
+	return res
 }
