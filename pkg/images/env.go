@@ -6,7 +6,13 @@ import (
 	"os/exec"
 )
 
+var ignoreEnviromentCheckForTesting = false
+
 func CheckEnvironment() error {
+	if ignoreEnviromentCheckForTesting {
+		return nil
+	}
+
 	for _, cmd := range Binaries {
 		_, err := exec.LookPath(cmd)
 		if err != nil {
