@@ -109,7 +109,7 @@ func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name stri
 		defer kd.Conf.SaveTo(log, dir, backupConf)
 	}
 
-	err = removeGitWorkDir(ctx, log, name, kd.Dir)
+	err = removeGitWorkDir(ctx, log, kd.Dir, name)
 	if err != nil {
 		log.WithError(err).Warn("remove work dir encountered errors")
 	}
