@@ -10,6 +10,7 @@ import (
 func TestActionsJSON(t *testing.T) {
 	acts := []Action{
 		{Op: &RunCommand{Cmd: "echo hello!"}, Comment: "hello"},
+		{Op: &CopyInCommand{LocalPath: "/foo", RemoteDir: "/"}, Comment: "copy"},
 	}
 
 	for i := range acts {

@@ -14,6 +14,8 @@ import (
 // NB: we can maybe merge multiple VirtCustomizeStep in a single virt-customize invocation.
 // The idea here would be that virt-customize performs the actions in its
 // arguments sequentially.
+//
+// NB: we can probably do the same with guestfish as well
 type VirtCustomizeStep struct {
 	*StepConf
 	Args []string

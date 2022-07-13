@@ -1,6 +1,8 @@
 package images
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
@@ -20,7 +22,12 @@ type Action struct {
 	Op      ActionOp
 }
 
-// RunScript runs a script in a path specified by a string
+var actionOpInstances = []ActionOp{
+	&RunCommand{},
+	&CopyInCommand{},
+}
+
+// RunCommand runs a script in a path specified by a string
 type RunCommand struct {
 	Cmd string
 }
@@ -36,6 +43,19 @@ func (rc *RunCommand) ToStep(s *StepConf) multistep.Step {
 	}
 }
 
-var actionOpInstances = []ActionOp{
-	&RunCommand{},
+// CopyInCommand copies local files in the image (recursively)
+type CopyInCommand struct {
+	LocalPath string
+	RemoteDir string
+}
+
+func (c *CopyInCommand) ActionOpName() string {
+	return "copy-in"
+}
+
+func (c *CopyInCommand) ToStep(s *StepConf) multistep.Step {
+	return &VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--copy-in", fmt.Sprintf("%s:%s", c.LocalPath, c.RemoteDir)},
+	}
 }

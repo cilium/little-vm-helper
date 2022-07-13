@@ -38,6 +38,8 @@ func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, imag
 	state := new(multistep.BasicStateBag)
 	steps := make([]multistep.Step, 1+len(cnf.Actions))
 	steps[0] = NewCreateImage(stepConf)
+	fmt.Printf("%d\n", len(cnf.Actions))
+	fmt.Printf("%v\n", cnf.Actions)
 	for i := 0; i < len(cnf.Actions); i++ {
 		steps[1+i] = cnf.Actions[i].Op.ToStep(stepConf)
 	}
