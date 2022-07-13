@@ -65,8 +65,8 @@ append initrd=initrd.img root=/dev/sda rw console=ttyS0
 `
 
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
+	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
-
 	// build package list: add a kernel if building a bootable image
 	packages := make([]string, 0, len(s.imgCnf.Packages)+1)
 	if s.bootable {
@@ -90,7 +90,6 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 		}
 	}()
 
-	imgFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
 	// example: guestfish -N foo.img=disk:8G -- mkfs ext4 /dev/sda : mount /dev/sda / : tar-in /tmp/foo.tar /
 	if s.bootable {
 		dirname, err := os.MkdirTemp("", "extlinux-")
@@ -133,22 +132,39 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 			"tar-in", tarFname, "/",
 		)
 	}
-	return logcmd.RunAndLogCommand(cmd, s.log)
+
+	if err := logcmd.RunAndLogCommand(cmd, s.log); err != nil {
+		return err
+	}
+
+	if imageFormatFromFname(imgFname) == "qcow2" {
+		tmpImage := fmt.Sprintf("%s.img", imgFname)
+		if err := os.Rename(imgFname, tmpImage); err != nil {
+			return err
+		}
+		defer os.Remove(tmpImage)
+		cmd := exec.CommandContext(ctx, QemuImg, "convert", "-f", "raw", "-O", "qcow2", tmpImage, imgFname)
+		return logcmd.RunAndLogCommand(cmd, s.log)
+	}
+
+	return nil
+
 }
 
 func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
-	parFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Parent))
-	imgFname := path.Join(s.imagesDir, fmt.Sprintf("%s.img", s.imgCnf.Name))
+	parFname := filepath.Join(s.imagesDir, s.imgCnf.Parent)
+	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 
-	// NB: cp has detection for sparse files, so just use that for now
-	// -n: don't override.
-	cmd := exec.CommandContext(ctx, "cp", "--sparse", "always", "-n", parFname, imgFname)
+	parFmt := imageFormatFromFname(parFname)
+	imgFmt := imageFormatFromFname(imgFname)
+
+	cmd := exec.CommandContext(ctx, QemuImg, "convert", "-f", parFmt, "-O", imgFmt, parFname, imgFname)
 	err := logcmd.RunAndLogCommand(cmd, s.log)
 	if err != nil {
 		return err
 	}
 
-	cmd = exec.CommandContext(ctx, "virt-customize",
+	cmd = exec.CommandContext(ctx, VirtCustomize,
 		"-a", imgFname,
 		"--install", strings.Join(s.imgCnf.Packages, ","),
 	)

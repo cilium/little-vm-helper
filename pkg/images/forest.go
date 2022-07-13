@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -59,7 +58,7 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = os.WriteFile(path.Join(conf.Dir, DefaultConfFile), confb, 0666)
+		err = os.WriteFile(filepath.Join(conf.Dir, DefaultConfFile), confb, 0666)
 		if err != nil {
 			return nil, fmt.Errorf("error writing configuration: %w", err)
 		}
@@ -72,17 +71,17 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 	}, nil
 }
 
-// ImageFilenamePrefix returns the filename prefix (no extension) of an image
-func (f *ImageForest) ImageFilenamePrefix(image string) (string, error) {
+// ImageFilename returns the filename of an image
+func (f *ImageForest) ImageFilename(image string) (string, error) {
 	if _, ok := f.confs[image]; !ok {
 		return "", fmt.Errorf("no configuration for image '%s'", image)
 	}
 
-	return f.imageFilenamePrefix(image), nil
+	return f.imageFilename(image), nil
 }
 
-func (f *ImageForest) imageFilenamePrefix(image string) string {
-	return path.Join(f.imagesDir, image)
+func (f *ImageForest) imageFilename(image string) string {
+	return filepath.Join(f.imagesDir, image)
 }
 
 // getDependencies returns the dependencies of an image, i.e., what images need to be build before it

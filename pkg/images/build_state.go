@@ -32,11 +32,11 @@ func (b *buildState) buildImage(image string) BuildImageResult {
 // skipRebuild checks if an image is not required to be build because it
 // already exists.
 func (b *buildState) skipRebuild(image string) BuildImageResult {
-	imageFnamePrefix, err := b.f.ImageFilenamePrefix(image)
+	imageFname, err := b.f.ImageFilename(image)
 	if err != nil {
 		return BuildImageResult{Error: err}
 	}
-	imageFname := fmt.Sprintf("%s.%s", imageFnamePrefix, DefaultImageExt)
+
 	if fi, err := os.Stat(imageFname); err == nil {
 		mode := fi.Mode()
 		if !mode.IsRegular() {

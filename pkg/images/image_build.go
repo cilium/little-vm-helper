@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/sirupsen/logrus"
@@ -17,7 +16,7 @@ func (f *ImageForest) doBuildImageDryRun(image string) error {
 		return fmt.Errorf("building image '%s' failed, configuration not found", image)
 	}
 
-	fname := fmt.Sprintf("%s.%s", f.imageFilenamePrefix(image), DefaultImageExt)
+	fname := f.imageFilename(image)
 	file, err := os.Create(fname)
 	defer file.Close()
 
@@ -47,7 +46,7 @@ func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, imag
 	runner.Run(ctx, state)
 	err := state.Get("err")
 	if err != nil {
-		imgFname := path.Join(f.imagesDir, fmt.Sprintf("%s.%s", cnf.Name, DefaultImageExt))
+		imgFname := f.imageFilename(image)
 		log.Warnf("image file '%s' left for inspection", imgFname)
 		return err.(error)
 	}

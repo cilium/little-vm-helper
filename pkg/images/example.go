@@ -2,7 +2,7 @@ package images
 
 var ExampleImagesConf = []ImgConf{
 	{
-		Name: "base",
+		Name: "base.img",
 		Packages: []string{
 			"less",
 			"vim",
@@ -18,7 +18,7 @@ var ExampleImagesConf = []ImgConf{
 		}},
 	},
 	{
-		Name:   "k8s",
+		Name:   "k8s.qcow2",
 		Parent: "base",
 		Packages: []string{
 			"docker.io",
