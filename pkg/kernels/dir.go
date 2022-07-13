@@ -59,7 +59,7 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 	}
 	defer os.Chdir(oldPath)
 
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "defconfig", "prepare"); err != nil {
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "defconfig", "prepare"); err != nil {
 		return err
 	}
 
@@ -67,20 +67,20 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 
 	// common options first
 	for _, opts := range kd.Conf.CommonOpts {
-		if err := logcmd.RunAndLogCmdContext(ctx, log, configCmd, opts...); err != nil {
+		if err := logcmd.RunAndLogCommandContext(ctx, log, configCmd, opts...); err != nil {
 			return err
 		}
 	}
 
 	// then kernel-specific options
 	for _, opts := range kc.Opts {
-		if err := logcmd.RunAndLogCmdContext(ctx, log, configCmd, opts...); err != nil {
+		if err := logcmd.RunAndLogCommandContext(ctx, log, configCmd, opts...); err != nil {
 			return err
 		}
 	}
 
 	// run make olddefconfig to clean up the config file
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "olddefconfig"); err != nil {
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "olddefconfig"); err != nil {
 		return err
 	}
 
@@ -106,11 +106,11 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 	}
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
 		return fmt.Errorf("buiding bzImage failed: %w", err)
 	}
 
-	if err := logcmd.RunAndLogCmdContext(ctx, log, MakeBinary, "-C", srcDir, "dir-pkg"); err != nil {
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "dir-pkg"); err != nil {
 		return fmt.Errorf("build dir failed: %w", err)
 	}
 

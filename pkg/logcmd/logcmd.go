@@ -122,7 +122,7 @@ func RunAndLogCommand(
 	return runAndLogCommand(nil, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 }
 
-func RunAndLogCmdContext(
+func RunAndLogCommandContext(
 	ctx context.Context,
 	log *logrus.Logger,
 	cmd0 string,

@@ -68,7 +68,7 @@ func TestLogcmdTimeout(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 	defer cancel()
-	err := RunAndLogCmdContext(ctx, log, "/bin/sh", "-c", "sleep inf")
+	err := RunAndLogCommandContext(ctx, log, "/bin/sh", "-c", "sleep inf")
 	assert.ErrorIs(t, err, context.DeadlineExceeded)
 }
 
@@ -83,6 +83,6 @@ func TestLogcmdNoTimeout(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	err := RunAndLogCmdContext(ctx, log, "/bin/sh", "-c", "sleep .1s")
+	err := RunAndLogCommandContext(ctx, log, "/bin/sh", "-c", "sleep .1s")
 	assert.Nil(t, err)
 }
