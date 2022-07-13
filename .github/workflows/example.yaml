@@ -1,0 +1,44 @@
+name: run example
+on:
+  # Allow to run manually via GitHub UI
+  workflow_dispatch: {}
+  # Additionally run weekly
+  schedule:
+    - cron:  '0 0 * * 0'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.18.4'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get -qy update
+        # we need this to build debian images
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9
+        sudo apt-get -qy install mmdebstrap libguestfs-tools qemu-utils extlinux git fakeroot build-essential xz-utils libssl-dev bc flex libelf-dev bison
+
+    - name: Checkout code
+      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      with:
+        path: src/little-vm-helper
+
+    - name: Make kernel accessible
+      run: |
+        sudo chmod go+rX -R /boot/
+
+    - name:  Run example
+      env:
+        LIBGUESTFS_DEBUG: 0
+        LIBGUESTFS_TRACE: 0
+      run: |
+        cd src/little-vm-helper
+        ./scripts/example.sh

@@ -5,7 +5,8 @@ set -o pipefail
 set -u
 set -x
 
-LVH="go run ./cmd/lvh"
+make little-vm-helper
+LVH="./lvh"
 # NB: using _data so that this directory is ignored by the go build system
 DATADIR="_data"
 
