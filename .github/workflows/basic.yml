@@ -22,7 +22,7 @@ jobs:
       with:
         path: src/little-vm-helper
 
-    - name: Run go tests
+    - name: Build and run Go tests
       env:
         GOPATH: /home/runner/work/tetragon/tetragon/go
       run: |
