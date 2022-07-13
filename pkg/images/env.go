@@ -22,10 +22,17 @@ func CheckEnvironment() error {
 
 	// libguestfs requires access to KVM
 	f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755)
-	if err != nil {
-		return fmt.Errorf("Unable to open /dev/kvm")
+	if err == nil {
+		f.Close()
+		return nil
 	}
-	f.Close()
+
+	// seems like libguestfs will properly work if /dev/kvm does not exist
+	if os.IsNotExist(err) {
+		return nil
+	}
+
+	return fmt.Errorf("Unable to open /dev/kvm")
 
 	return nil
 }
