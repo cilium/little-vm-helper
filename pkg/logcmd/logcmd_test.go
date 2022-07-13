@@ -75,7 +75,6 @@ func TestLogcmdTimeout(t *testing.T) {
 func TestLogcmdNoTimeout(t *testing.T) {
 	log := logrus.New()
 	log.SetOutput(ioutil.Discard)
-
 	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
 	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
 	log.AddHook(&infoRecorder)
@@ -85,4 +84,21 @@ func TestLogcmdNoTimeout(t *testing.T) {
 	defer cancel()
 	err := RunAndLogCommandContext(ctx, log, "/bin/sh", "-c", "sleep .1s")
 	assert.Nil(t, err)
+}
+
+func TestRunAndLogCommandsContext(t *testing.T) {
+	log := logrus.New()
+	log.SetOutput(ioutil.Discard)
+	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
+	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
+	log.AddHook(&infoRecorder)
+	log.AddHook(&warnRecorder)
+
+	err := RunAndLogCommandsContext(context.Background(), log,
+		[]string{"/bin/sh", "-c", "echo FOO"},
+		[]string{"/bin/sh", "-c", "echo LALA>&2"},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, []string{"starting command", "stdout> FOO\n", "starting command"}, infoRecorder.Messages)
+	assert.Equal(t, []string{"stderr> LALA\n"}, warnRecorder.Messages)
 }

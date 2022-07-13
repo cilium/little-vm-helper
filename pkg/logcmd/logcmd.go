@@ -131,3 +131,23 @@ func RunAndLogCommandContext(
 	cmd := exec.CommandContext(ctx, cmd0, cmdArgs...)
 	return runAndLogCommand(ctx, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 }
+
+func RunAndLogCommandsContext(
+	ctx context.Context,
+	log *logrus.Logger,
+	commands ...[]string,
+) error {
+	for i := range commands {
+		args := commands[i]
+		if len(args) == 0 {
+			return fmt.Errorf("command %d is empty", i)
+		}
+		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+		err := runAndLogCommand(ctx, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+		if err != nil {
+			return fmt.Errorf("command %d failed: %w", i, err)
+		}
+	}
+
+	return nil
+}
