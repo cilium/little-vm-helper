@@ -6,18 +6,32 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"sync"
 
 	"github.com/sirupsen/logrus"
 )
 
-func logReader(rd *bufio.Reader, log *logrus.Logger, prefix string, level logrus.Level) error {
+func logReader(ctx context.Context, file *os.File, log *logrus.Logger, prefix string, level logrus.Level) error {
+
+	if ctx != nil {
+		if deadline, ok := ctx.Deadline(); ok {
+			if err := file.SetDeadline(deadline); err != nil {
+				log.Warnf("ctx deadline (%v) will not be respected", deadline)
+			}
+		}
+	}
+
+	rd := bufio.NewReader(file)
 	for {
 		line, err := rd.ReadString('\n')
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
+			}
+			if os.IsTimeout(err) {
+				return fmt.Errorf("read timeout due to context: %w", ctx.Err())
 			}
 			return err
 		}
@@ -27,6 +41,7 @@ func logReader(rd *bufio.Reader, log *logrus.Logger, prefix string, level logrus
 }
 
 func runAndLogCommand(
+	ctx context.Context,
 	cmd *exec.Cmd,
 	log *logrus.Logger,
 	stdoutLevel, stderrLevel logrus.Level,
@@ -51,13 +66,31 @@ func runAndLogCommand(
 		return fmt.Errorf("failed to execute command: %w", err)
 	}
 
+	// cmd.StderrPipe() and cmd.StdoutPipe() docs say that we need to wait for the pipe reads to
+	// finish, before waiting for the command using cmd.Wait(). However, if the command was
+	// created with a timeout ctx, then the process will be killed only in cmd.Wait().
+	//
+	// to solve this problem, rsc suggests to use os.Pipe() and SetReadDeadline:
+	// https://github.com/golang/go/issues/21922#issuecomment-338792340
+	//
+	// I was not sure how the pipes would be closed on the child end, but it seems that's taken
+	// care by go itself:
+	//  - https://github.com/golang/go/blob/bf2ef26be3593d24487311576d85ec601185fbf4/src/os/pipe_unix.go#L13-L28
+	//  - https://github.com/golang/go/blob/bf2ef26be3593d24487311576d85ec601185fbf4/src/syscall/exec_unix.go#L19-L65
+	//
+	// Because I'm lazy, howerver, I'll just reuse the file descriptors from
+	// cmd.Std{err,out}Pipe, since they are also calling os.Pipe():
+	// - https://github.com/golang/go/blob/bf2ef26be3593d24487311576d85ec601185fbf4/src/os/exec/exec.go#L786
+	// - https://github.com/golang/go/blob/bf2ef26be3593d24487311576d85ec601185fbf4/src/os/exec/exec.go#L761
+	stderrFile := stderr.(*os.File)
+	stdoutFile := stdout.(*os.File)
+
 	// start logging
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		rd := bufio.NewReader(stdout)
-		err = logReader(rd, log, "stdout> ", stdoutLevel)
+		err = logReader(ctx, stdoutFile, log, "stdout> ", stdoutLevel)
 		if err != nil {
 			log.Warnf("failed to read from stdout: %v", err)
 		}
@@ -65,8 +98,7 @@ func runAndLogCommand(
 
 	go func() {
 		defer wg.Done()
-		rd := bufio.NewReader(stderr)
-		err = logReader(rd, log, "stderr> ", stderrLevel)
+		err = logReader(ctx, stderrFile, log, "stderr> ", stderrLevel)
 		if err != nil {
 			log.Warnf("failed to read from stderr: %v", err)
 		}
@@ -76,14 +108,18 @@ func runAndLogCommand(
 	// see: https://pkg.go.dev/os/exec#Cmd.StdoutPipe
 	wg.Wait()
 
-	return cmd.Wait()
+	ret := cmd.Wait()
+	if ctx != nil && ctx.Err() != nil {
+		return ctx.Err()
+	}
+	return ret
 }
 
 func RunAndLogCommand(
 	cmd *exec.Cmd,
 	log *logrus.Logger,
 ) error {
-	return runAndLogCommand(cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+	return runAndLogCommand(nil, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 }
 
 func RunAndLogCmdContext(
@@ -93,5 +129,5 @@ func RunAndLogCmdContext(
 	cmdArgs ...string,
 ) error {
 	cmd := exec.CommandContext(ctx, cmd0, cmdArgs...)
-	return RunAndLogCommand(cmd, log)
+	return runAndLogCommand(ctx, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
 }
