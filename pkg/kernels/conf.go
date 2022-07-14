@@ -96,7 +96,7 @@ func GetConfigGroupNames() []string {
 	return ret
 }
 
-func (cnf *Conf) SaveTo(log *logrus.Logger, dir string, backup bool) error {
+func (cnf *Conf) SaveTo(log logrus.FieldLogger, dir string, backup bool) error {
 	fname := path.Join(dir, ConfigFname)
 	confb, err := json.MarshalIndent(cnf, "", "    ")
 	if err != nil {

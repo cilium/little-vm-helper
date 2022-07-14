@@ -97,47 +97,81 @@ func AddKernel(ctx context.Context, log *logrus.Logger, dir string, cnf *KernelC
 	return nil
 }
 
-func RemoveKernel(ctx context.Context, log *logrus.Logger, dir string, name string, backupConf bool) error {
+// RemoveKernel will remove a kernel.
+// It will typically try to continue, even if it encounters an error
+func RemoveKernel(ctx context.Context, log_ *logrus.Logger, dir string, name string, backupConf bool) error {
 	kd, err := LoadDir(dir)
 	if err != nil {
 		return err
 	}
 
-	if kd.RemoveKernelConfig(name) == nil {
-		log.Warnf("kernel `%s` does not exist in configuration", name)
+	path := filepath.Join(dir, name)
+	log := log_.WithField("kernel", name).WithField("path", path)
+
+	cnf := kd.RemoveKernelConfig(name)
+	if cnf == nil {
+		log.Warn("kernel does not exist, will try to remove path")
+		if err := os.RemoveAll(path); err != nil {
+			log.WithError(err).Warn("removing path failed")
+			return fmt.Errorf("failed to remove kernel `%s`: %w", name, err)
+		}
+		return fmt.Errorf("kernel `%s` does not exist in configuration", name)
+	}
+	defer kd.Conf.SaveTo(log, dir, backupConf)
+
+	if kurl, parseErr := ParseURL(cnf.URL); parseErr != nil {
+		log.WithField("url", cnf.URL).Warn("kernel has invalid URL, will try to remove path")
+		if err := os.RemoveAll(path); err != nil {
+			log.WithError(err).Warn("removing path failed")
+			return fmt.Errorf("failed to remove kernel `%s`: %w", name, err)
+		}
+		return fmt.Errorf("kernel `%s` has invalid URL `%s`", name, cnf.URL)
 	} else {
-		defer kd.Conf.SaveTo(log, dir, backupConf)
+		return kurl.remove(ctx, log, dir, name)
 	}
-
-	err = removeGitWorkDir(ctx, log, kd.Dir, name)
-	if err != nil {
-		log.WithError(err).Warn("remove work dir encountered errors")
-	}
-
-	return nil
 }
 
-func BuildKernel(ctx context.Context, log *logrus.Logger, dir, kname string) error {
+func getKernelInfo(dir, kname string) (*KernelsDir, *KernelConf, KernelURL, error) {
 	kd, err := LoadDir(dir)
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 
 	kconf := kd.KernelConfig(kname)
 	if kconf == nil {
-		return fmt.Errorf("kernel `%s` not found", kname)
+		return nil, nil, nil, fmt.Errorf("kernel `%s` not found", kname)
 	}
 
 	kURL, err := ParseURL(kconf.URL)
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 
-	err = kURL.fetch(context.Background(), log, kd.Dir, kconf.Name)
+	return kd, kconf, kURL, nil
+
+}
+
+func FetchKernel(ctx context.Context, log *logrus.Logger, dir, kname string) error {
+	kd, kc, kurl, err := getKernelInfo(dir, kname)
 	if err != nil {
 		return err
-		log.Fatal(err)
 	}
 
-	return kd.buildKernel(context.Background(), log, kconf)
+	return kurl.fetch(ctx, log, kd.Dir, kc.Name)
+}
+
+func BuildKernel(ctx context.Context, log *logrus.Logger, dir, kname string, fetch bool) error {
+	kd, kc, kurl, err := getKernelInfo(dir, kname)
+	if err != nil {
+		return err
+	}
+
+	if fetch {
+		if err := kurl.fetch(ctx, log, kd.Dir, kc.Name); err != nil {
+			return fmt.Errorf("fetch failed: %w", err)
+		}
+
+	}
+
+	return kd.buildKernel(ctx, log, kc)
 }

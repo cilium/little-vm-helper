@@ -13,22 +13,12 @@ import (
 )
 
 func addCommand() *cobra.Command {
-	addExamples := func() string {
-		var sb strings.Builder
-
-		for _, ex := range kernels.UrlExamples {
-			sb.WriteString(fmt.Sprintf("  add %s %s\n", ex.Name, ex.URL))
-		}
-
-		return sb.String()
-	}
-
 	var addConfigGroups []string
 	var addPrintConfig, addFetch, backupConf bool
 	addCmd := &cobra.Command{
 		Use:     "add <name> <url>",
 		Short:   "add kernel (by updating config file in directory)",
-		Example: addExamples(),
+		Example: kernels.GetExamplesText(),
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			log := logrus.New()

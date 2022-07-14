@@ -8,15 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildCommand() *cobra.Command {
+func fetchCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "build <kernel>",
-		Short: "build kernel",
+		Use:   "fetch <kernel>",
+		Short: "fetch kernel",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log := logrus.New()
 			kname := args[0]
-			return kernels.BuildKernel(context.Background(), log, dirName, kname, false /* TODO: add fetch flag */)
+			return kernels.FetchKernel(context.Background(), log, dirName, kname)
 		},
 	}
 }

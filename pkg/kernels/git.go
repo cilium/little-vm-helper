@@ -3,6 +3,7 @@ package kernels
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
@@ -10,6 +11,45 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 )
+
+type gitCloneOrFetchDirArg struct {
+	dir          string
+	remoteRepo   string
+	remoteBranch string
+	depth        int
+}
+
+func gitCloneOrFetchDir(ctx context.Context, log logrus.FieldLogger, arg *gitCloneOrFetchDirArg) error {
+
+	var args []string
+	if exists, err := directoryExists(arg.dir); err != nil {
+		return err
+	} else if exists {
+		oldPath, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		err = os.Chdir(arg.dir)
+		if err != nil {
+			return err
+		}
+		defer os.Chdir(oldPath)
+		args = []string{
+			"fetch",
+		}
+	} else {
+		args = []string{
+			"clone",
+			"--depth", fmt.Sprintf("%d", arg.depth),
+			"--branch", arg.remoteBranch,
+			arg.remoteRepo,
+			arg.dir,
+		}
+
+	}
+
+	return logcmd.RunAndLogCommandContext(ctx, log, GitBinary, args...)
+}
 
 type gitAddWorkdirArg struct {
 	workDir      string
@@ -20,7 +60,7 @@ type gitAddWorkdirArg struct {
 	localBranch  string
 }
 
-func gitAddWorkdir(ctx context.Context, log *logrus.Logger, arg *gitAddWorkdirArg) error {
+func gitAddWorkdir(ctx context.Context, log logrus.FieldLogger, arg *gitAddWorkdirArg) error {
 	remoteAddArgs := []string{
 		"--git-dir", arg.bareDir,
 		"remote", "add",
@@ -46,7 +86,7 @@ func gitLocalBranch(kname string) string {
 	return fmt.Sprintf("lvh-%s", kname)
 }
 
-func removeGitWorkDir(ctx context.Context, log *logrus.Logger, dir, kName string) error {
+func removeGitWorkDir(ctx context.Context, log logrus.FieldLogger, dir, kName string) error {
 	return gitRemoveWorkdir(context.Background(), log,
 		&gitRemoveWorkdirArg{
 			workDir:     kName,
@@ -64,7 +104,7 @@ type gitRemoveWorkdirArg struct {
 	localBranch string
 }
 
-func gitRemoveWorkdir(ctx context.Context, log *logrus.Logger, arg *gitRemoveWorkdirArg) error {
+func gitRemoveWorkdir(ctx context.Context, log logrus.FieldLogger, arg *gitRemoveWorkdirArg) error {
 	var res error
 
 	worktreeRemoveArgs := []string{

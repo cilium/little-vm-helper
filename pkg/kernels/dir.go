@@ -26,6 +26,7 @@ func (kd *KernelsDir) KernelConfig(name string) *KernelConf {
 	return nil
 }
 
+// RemoveKernelConfig returns the removed kernel config if it was found
 func (kd *KernelsDir) RemoveKernelConfig(name string) *KernelConf {
 	for i := range kd.Conf.Kernels {
 		if kd.Conf.Kernels[i].Name == name {

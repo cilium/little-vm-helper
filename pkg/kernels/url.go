@@ -9,8 +9,10 @@ import (
 )
 
 type KernelURL interface {
-	// returns the directory of the source code, or an error
-	fetch(ctx context.Context, log *logrus.Logger, dir string, name string) error
+	// fetches the kernel named <name> in <dir>/<name>
+	fetch(ctx context.Context, log logrus.FieldLogger, dir string, name string) error
+	// removes the kernel named <name>
+	remove(ctx context.Context, log logrus.FieldLogger, dir string, name string) error
 }
 
 func ParseURL(s string) (KernelURL, error) {

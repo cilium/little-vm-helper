@@ -22,6 +22,7 @@ func KernelsCommand() *cobra.Command {
 		removeCommand(),
 		configureCommand(),
 		buildCommand(),
+		fetchCommand(),
 	)
 
 	return cmd
