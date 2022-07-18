@@ -144,7 +144,7 @@ func TestImageBuilds(t *testing.T) {
 		// NB: anonymous function so that os.RemoveAll() is called in all iterations
 		func() {
 			dir, err := ioutil.TempDir("", "test_build_images")
-			imagesDir := filepath.Join(dir, DefaultImagesDir)
+			imagesDir := dir
 			os.Mkdir(imagesDir, 0755)
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)

@@ -16,7 +16,7 @@ type ImageForest struct {
 	children  map[string][]string
 }
 
-// NewImageForest creates a new image builder
+// NewImageForest creates a new image forest
 // it will create a new image directory if it does not exist
 // if saveConfigFileInDir is set, a serialized version of the configuration
 // file will be saved in the image directory
@@ -42,12 +42,16 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 	children := make(map[string][]string)
 	for child, parent := range parent {
 		if _, ok := confs[parent]; !ok {
-			return nil, fmt.Errorf("image '%s' specified as parent, but it is not defined", parent)
+			// NB: in some cases, we want to build an iamge based on
+			// another image, without including the former in our
+			// configuration.
+			continue
+			// return nil, fmt.Errorf("image '%s' specified as parent, but it is not defined", parent)
 		}
 		children[parent] = append(children[parent], child)
 	}
 
-	imagesDir := filepath.Join(conf.Dir, DefaultImagesDir)
+	imagesDir := conf.Dir
 	err := os.MkdirAll(imagesDir, 0755)
 	if err != nil && !os.IsExist(err) {
 		return nil, err
@@ -122,10 +126,40 @@ func (f *ImageForest) LeafImages() []string {
 	return ret
 }
 
+func (f *ImageForest) isRootImage(cnf *ImgConf) bool {
+	if cnf.Parent == "" {
+		return true
+		// if there is no parent, this is a root image
+	} else if _, ok := f.children[cnf.Parent]; !ok {
+		// if there is a parent, but it's not in our
+		// configuration, also treat this as a root image.
+		return true
+	}
+
+	return false
+}
+
+func (f *ImageForest) IsRootImage(image string) (bool, error) {
+	cnf, ok := f.confs[image]
+	if !ok {
+		return false, fmt.Errorf("image `%s` does not exist in forest", image)
+	}
+	return f.isRootImage(cnf), nil
+}
+
+// returns parent image, or ""
+func (f *ImageForest) getParent(image string) string {
+	cnf := f.confs[image]
+	if f.isRootImage(cnf) {
+		return ""
+	}
+	return cnf.Parent
+}
+
 func (f *ImageForest) RootImages() []string {
 	ret := make([]string, 0)
 	for i, cnf := range f.confs {
-		if cnf.Parent == "" {
+		if f.isRootImage(cnf) {
 			ret = append(ret, i)
 		}
 	}

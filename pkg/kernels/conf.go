@@ -70,10 +70,22 @@ var ConfigOptGroups = map[string][]ConfigOption{
 	},
 	"bpf": []ConfigOption{
 		{"--enable", "CONFIG_BPF"},
+		{"--enable", "CONFIG_BPF_SYSCALL"},
+		{"--enable", "CONFIG_NETFILTER_XT_MATCH_BPF"},
+		{"--enable", "CONFIG_NET_CLS_BPF"},
+		{"--enable", "CONFIG_NET_ACT_BPF"},
+		{"--enable", "CONFIG_BPF_JIT"},
 		{"--enable", "CONFIG_HAVE_BPF_JIT"},
-		{"--enable", "CONFIG_HAVE_EBPF_JIT"},
 		{"--enable", "CONFIG_BPF_EVENTS"},
+		{"--enable", "CONFIG_BPF_STREAM_PARSER"},
 		{"--enable", "CONFIG_TEST_BPF"},
+		{"--enable", "CONFIG_LWTUNNEL_BPF"},
+		{"--enable", "CONFIG_DEBUG_INFO_BTF"},
+		{"--enable", "CONFIG_DEBUG_INFO_BTF_MODULES"},
+		{"--enable", "CONFIG_BPF_LSM"},
+		{"--enable", "CONFIG_CGROUP_BPF"},
+		{"--enable", "CONFIG_FTRACE_SYSCALLS"},
+		//{"--enable", "CONFIG_BPF_PRELOAD"},
 	},
 	"virtio": []ConfigOption{
 		{"--enable", "CONFIG_VIRTIO"},
@@ -81,12 +93,23 @@ var ConfigOptGroups = map[string][]ConfigOption{
 		{"--enable", "CONFIG_VIRTIO_PCI_LIB"},
 		{"--enable", "CONFIG_VIRTIO_PCI"},
 		{"--enable", "CONFIG_VIRTIO_NET"},
+		{"--enable", "CONFIG_NET_9P"},
+		{"--enable", "CONFIG_9P_FS"},
 		{"--enable", "CONFIG_NET_9P_VIRTIO"},
 		{"--enable", "CONFIG_VIRTIO_BLK"},
 	},
+	"namespaces": []ConfigOption{
+		{"--enable", "CONFIG_NAMESPACES"},
+		{"--enable", "CONFIG_UTS_NS"},
+		{"--enable", "CONFIG_TIME_NS"},
+		{"--enable", "CONFIG_IPC_NS"},
+		{"--enable", "CONFIG_USER_NS"},
+		{"--enable", "CONFIG_PID_NS"},
+		{"--enable", "CONFIG_NET_NS"},
+	},
 }
 
-var DefaultConfigGroups = []string{"basic", "bpf", "virtio", "minimize"}
+var DefaultConfigGroups = []string{"basic", "bpf", "virtio", "minimize", "namespaces"}
 
 func GetConfigGroupNames() []string {
 	ret := make([]string, 0, len(ConfigOptGroups))

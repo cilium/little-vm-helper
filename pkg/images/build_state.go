@@ -61,7 +61,7 @@ func (b *buildState) skipRebuild(image string) BuildImageResult {
 			}
 		}
 
-		if parent := b.f.confs[image].Parent; parent != "" && !b.bldResult.ImageResults[parent].CachedImageUsed {
+		if parent := b.f.getParent(image); parent != "" && !b.bldResult.ImageResults[parent].CachedImageUsed {
 			os.Remove(imageFname)
 			return BuildImageResult{
 				CachedImageDeleted: fmt.Sprintf("image '%s' existed, but parent '%s' did not use the cache", imageFname, parent),

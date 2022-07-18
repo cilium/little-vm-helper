@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/cilium/little-vm-helper/pkg/images"
@@ -21,7 +21,8 @@ func BuildCmd() *cobra.Command {
 		Short: "Build VM images",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			log := logrus.New()
-			configFname := path.Join(dirName, images.DefaultConfFile)
+			imagesDir := filepath.Join(dirName, "images")
+			configFname := filepath.Join(dirName, images.DefaultConfFile)
 
 			configData, err := os.ReadFile(configFname)
 			if err != nil {
@@ -29,7 +30,7 @@ func BuildCmd() *cobra.Command {
 			}
 
 			var cnf images.ImagesConf
-			cnf.Dir = dirName
+			cnf.Dir = imagesDir
 			err = json.Unmarshal(configData, &cnf.Images)
 			if err != nil {
 				return err

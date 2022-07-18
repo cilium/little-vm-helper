@@ -11,7 +11,8 @@ import (
 // Note:
 // If you create an instance of ActionOp, you need to add it to
 // actionOpInstances so that JSON marshaling/unmarshaling works. Please also
-// add a test case in actions_json_test.go to ensure that all works.
+// consider adding a test case in actions_json_test.go to ensure that all
+// works.
 type ActionOp interface {
 	ActionOpName() string
 	ToStep(s *StepConf) multistep.Step
@@ -57,5 +58,37 @@ func (c *CopyInCommand) ToStep(s *StepConf) multistep.Step {
 	return &VirtCustomizeStep{
 		StepConf: s,
 		Args:     []string{"--copy-in", fmt.Sprintf("%s:%s", c.LocalPath, c.RemoteDir)},
+	}
+}
+
+// SetHostnameCommand sets the hostname
+type SetHostnameCommand struct {
+	Hostname string
+}
+
+func (c *SetHostnameCommand) ActionOpName() string {
+	return "set-hostname"
+}
+
+func (c *SetHostnameCommand) ToStep(s *StepConf) multistep.Step {
+	return &VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--hostname", c.Hostname},
+	}
+}
+
+// MkdirCommand creates a directory
+type MkdirCommand struct {
+	Dir string
+}
+
+func (c *MkdirCommand) ActionOpName() string {
+	return "mkdir"
+}
+
+func (c *MkdirCommand) ToStep(s *StepConf) multistep.Step {
+	return &VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--mkdir", c.Dir},
 	}
 }

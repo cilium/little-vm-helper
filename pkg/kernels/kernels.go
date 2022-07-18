@@ -127,7 +127,7 @@ func RemoveKernel(ctx context.Context, log_ *logrus.Logger, dir string, name str
 		}
 		return fmt.Errorf("kernel `%s` has invalid URL `%s`", name, cnf.URL)
 	} else {
-		return kurl.remove(ctx, log, dir, name)
+		return kurl.remove(ctx, log, kd.Dir, name)
 	}
 }
 

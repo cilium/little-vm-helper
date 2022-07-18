@@ -35,16 +35,6 @@ func TestImageBuilderConfs(t *testing.T) {
 			},
 		},
 		{
-			// error: parent is not defined anywhere
-			confs: []ImgConf{
-				{Name: "image1", Parent: "base"},
-			},
-			test: func(f *ImageForest, err error) {
-				assert.Nil(t, f)
-				assert.NotNil(t, err)
-			},
-		},
-		{
 			confs: []ImgConf{
 				{Name: "base"},
 				{Name: "image1", Parent: "base"},

@@ -4,7 +4,7 @@ package images
 type ImgConf struct {
 	// Name of the image
 	Name string `json:"name"`
-	// Parent is the name paren timage (or "" if image does not have a parent)
+	// Parent is the name parent image (or "" if image does not have a parent)
 	Parent string `json:"parent,omitempty"`
 	// Packages is the list of packages contained in the image
 	Packages []string `json:"packages"`

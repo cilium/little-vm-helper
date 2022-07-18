@@ -164,11 +164,15 @@ func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
 		return err
 	}
 
-	cmd = exec.CommandContext(ctx, VirtCustomize,
-		"-a", imgFname,
-		"--install", strings.Join(s.imgCnf.Packages, ","),
-	)
-	return logcmd.RunAndLogCommand(cmd, s.log)
+	if len(s.imgCnf.Packages) > 0 {
+		cmd = exec.CommandContext(ctx, VirtCustomize,
+			"-a", imgFname,
+			"--install", strings.Join(s.imgCnf.Packages, ","),
+		)
+		return logcmd.RunAndLogCommand(cmd, s.log)
+	}
+
+	return nil
 }
 
 func (s *CreateImage) Run(ctx context.Context, b multistep.StateBag) multistep.StepAction {
