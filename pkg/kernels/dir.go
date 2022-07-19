@@ -1,13 +1,16 @@
 package kernels
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
+	"github.com/hashicorp/go-multierror"
 	"github.com/sirupsen/logrus"
 )
 
@@ -47,6 +50,82 @@ func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, k
 	return kd.configureKernel(ctx, log, kc)
 }
 
+func kcfonfigValidate(opts []ConfigOption) error {
+
+	var ret error
+	// we want to check that:
+	//  - what is supposed to be enabled, is enabled
+	//  - what is supposed to be disabled, is not enabled
+
+	type OptMapVal struct {
+		enabled bool
+		checked bool
+	}
+
+	optMap := make(map[string]OptMapVal)
+	for _, opt := range opts {
+		switch opt[0] {
+		case "--enable":
+			optMap[opt[1]] = OptMapVal{enabled: true}
+		case "--disable":
+			optMap[opt[1]] = OptMapVal{enabled: false}
+		default:
+			return fmt.Errorf("Unknown option: %s", opt[0])
+		}
+	}
+
+	// validate config file
+	kcfg, err := os.Open(".config")
+	if err != nil {
+		return fmt.Errorf("failed to open config file: %w", err)
+	}
+	defer kcfg.Close()
+
+	enabledRe := regexp.MustCompile(`([a-zA-Z0-9_]+)=y`)
+	disabledRe := regexp.MustCompile(`# ([a-zA-Z0-9_]+) is not set`)
+	s := bufio.NewScanner(kcfg)
+	for s.Scan() {
+		txt := s.Text()
+		var opt string
+		optEnabled := false
+		if match := enabledRe.FindStringSubmatch(txt); len(match) > 0 {
+			opt = match[1]
+			optEnabled = true
+		} else if match := disabledRe.FindStringSubmatch(txt); len(match) > 0 {
+			opt = match[1]
+		} else {
+			continue
+		}
+
+		mapVal, ok := optMap[opt]
+		if !ok {
+			continue
+		}
+
+		mapVal.checked = true
+		optMap[opt] = mapVal
+
+		if mapVal.enabled != optEnabled {
+			err := fmt.Errorf("value %s misconfigured: expected: %t but seems to be %t based on '%s'", opt, mapVal.enabled, optEnabled, txt)
+			ret = multierror.Append(ret, err)
+		}
+
+	}
+
+	if err := s.Err(); err != nil {
+		return err
+	}
+
+	for i, v := range optMap {
+		if v.enabled && !v.checked {
+			err := fmt.Errorf("value %s enabled but not found", i)
+			ret = multierror.Append(ret, err)
+		}
+	}
+
+	return ret
+}
+
 func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
 	srcDir := filepath.Join(kd.Dir, kc.Name)
 
@@ -60,23 +139,45 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 	}
 	defer os.Chdir(oldPath)
 
+	configOptions := kd.Conf.getOptions(kc)
+
 	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "defconfig", "prepare"); err != nil {
 		return err
 	}
 
 	configCmd := filepath.Join(".", "scripts", "config")
-	for _, opts := range kd.Conf.getOptions(kc) {
+	for i, opts := range configOptions {
 		// NB: we could do this in a single command, but doing it one-by-one makes it easier to debug things
 		if err := logcmd.RunAndLogCommandContext(ctx, log, configCmd, opts...); err != nil {
 			return err
 		}
+
+		if false {
+			if err := kcfonfigValidate(configOptions[:i+1]); err != nil {
+				return fmt.Errorf("failed to validate config after applying %v: %w", opts, err)
+			}
+		}
+
 	}
 
-	// run make olddefconfig to clean up the config file
+	if false {
+		if err := kcfonfigValidate(configOptions); err != nil {
+			return fmt.Errorf("failed to validate config after scripts: %w", err)
+		}
+	}
+
+	// run make olddefconfig to clean up the config file, and ensure that everything is in order
 	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "olddefconfig"); err != nil {
 		return err
 	}
 
+	// NB: some configuration options are only available in certain
+	// kernels. We have no way of dealing with this currently.
+	if err := kcfonfigValidate(configOptions); err != nil {
+		log.Warnf("discrepancies in generated config: %s", err)
+	}
+
+	log.Info("configuration completed")
 	return nil
 }
 
