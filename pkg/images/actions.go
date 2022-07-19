@@ -26,6 +26,10 @@ type Action struct {
 var actionOpInstances = []ActionOp{
 	&RunCommand{},
 	&CopyInCommand{},
+	&SetHostnameCommand{},
+	&MkdirCommand{},
+	&UploadCommand{},
+	&ChmodCommand{},
 }
 
 // RunCommand runs a script in a path specified by a string
@@ -90,5 +94,39 @@ func (c *MkdirCommand) ToStep(s *StepConf) multistep.Step {
 	return &VirtCustomizeStep{
 		StepConf: s,
 		Args:     []string{"--mkdir", c.Dir},
+	}
+}
+
+// UploadCommand copies a file to the vim
+type UploadCommand struct {
+	File string
+	Dest string
+}
+
+func (c *UploadCommand) ActionOpName() string {
+	return "upload"
+}
+
+func (c *UploadCommand) ToStep(s *StepConf) multistep.Step {
+	return &VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--upload", fmt.Sprintf("%s:%s", c.File, c.Dest)},
+	}
+}
+
+// ChmodCommand
+type ChmodCommand struct {
+	Permissions string
+	File        string
+}
+
+func (c *ChmodCommand) ActionOpName() string {
+	return "chmod"
+}
+
+func (c *ChmodCommand) ToStep(s *StepConf) multistep.Step {
+	return &VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--chmod", fmt.Sprintf("%s:%s", c.Permissions, c.File)},
 	}
 }
