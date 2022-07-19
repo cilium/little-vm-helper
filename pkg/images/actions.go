@@ -32,6 +32,11 @@ var actionOpInstances = []ActionOp{
 	&ChmodCommand{},
 }
 
+type VirtCustomizeAction struct {
+	OpName  string
+	getArgs func() []string
+}
+
 // RunCommand runs a script in a path specified by a string
 type RunCommand struct {
 	Cmd string

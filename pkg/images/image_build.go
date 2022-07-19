@@ -23,7 +23,28 @@ func (f *ImageForest) doBuildImageDryRun(image string) error {
 	return err
 }
 
-func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, image string) error {
+// merge act2 to act1, or return an error
+func mergeSteps(step1, step2 multistep.Step) error {
+	mergable, ok := step1.(interface {
+		Merge(step multistep.Step) error
+	})
+	if !ok {
+		return fmt.Errorf("step1 (%v) not mergable", step1)
+	}
+
+	if err := mergable.Merge(step2); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (f *ImageForest) doBuildImage(
+	ctx context.Context,
+	log *logrus.Logger,
+	image string,
+	merge bool,
+) error {
 	cnf, ok := f.confs[image]
 	if !ok {
 		return fmt.Errorf("building image '%s' failed, configuration not found", image)
@@ -36,10 +57,15 @@ func (f *ImageForest) doBuildImage(ctx context.Context, log *logrus.Logger, imag
 	}
 
 	state := new(multistep.BasicStateBag)
-	steps := make([]multistep.Step, 1+len(cnf.Actions))
+	steps := make([]multistep.Step, 1, 1+len(cnf.Actions))
 	steps[0] = NewCreateImage(stepConf)
 	for i := 0; i < len(cnf.Actions); i++ {
-		steps[1+i] = cnf.Actions[i].Op.ToStep(stepConf)
+		next := cnf.Actions[i].Op.ToStep(stepConf)
+		prev := steps[len(steps)-1]
+		if merge && mergeSteps(prev, next) == nil {
+			continue
+		}
+		steps = append(steps, next)
 	}
 
 	runner := &multistep.BasicRunner{Steps: steps}

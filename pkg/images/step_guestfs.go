@@ -2,6 +2,7 @@ package images
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"path"
 
@@ -36,4 +37,18 @@ func (s *VirtCustomizeStep) Run(ctx context.Context, b multistep.StateBag) multi
 }
 
 func (s *VirtCustomizeStep) Cleanup(b multistep.StateBag) {
+}
+
+func (s *VirtCustomizeStep) Merge(step multistep.Step) error {
+	vcs, ok := step.(*VirtCustomizeStep)
+	if !ok {
+		return fmt.Errorf("type %T cannot be merged to a VirtCustomizeStep", step)
+	}
+
+	if vcs.StepConf != s.StepConf {
+		return fmt.Errorf("acttions with different step configurations cannnot be merged (%v vs %v)", s.StepConf, vcs.StepConf)
+	}
+
+	s.Args = append(s.Args, vcs.Args...)
+	return nil
 }
