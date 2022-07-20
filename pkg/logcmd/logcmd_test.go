@@ -35,10 +35,12 @@ func TestLogcmd(t *testing.T) {
 	log.AddHook(&infoRecorder)
 	log.AddHook(&warnRecorder)
 
-	err := runAndLogCommand(nil, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+	logStdout := getLogfForLevel(log, logrus.InfoLevel)
+	logStderr := getLogfForLevel(log, logrus.WarnLevel)
+	err := runAndLogCommand(nil, cmd, logStdout, logStderr)
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"stderr> FOO\n"}, warnRecorder.Messages)
-	assert.Equal(t, []string{"starting command", "stdout> LALA\n"}, infoRecorder.Messages)
+	assert.Equal(t, []string{"stdout> LALA\n"}, infoRecorder.Messages)
 }
 
 func TestLogcmdFail(t *testing.T) {
@@ -51,10 +53,12 @@ func TestLogcmdFail(t *testing.T) {
 	log.AddHook(&infoRecorder)
 	log.AddHook(&warnRecorder)
 
-	err := runAndLogCommand(nil, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+	logStdout := getLogfForLevel(log, logrus.InfoLevel)
+	logStderr := getLogfForLevel(log, logrus.WarnLevel)
+	err := runAndLogCommand(nil, cmd, logStdout, logStderr)
 	assert.Error(t, err)
 	assert.Nil(t, warnRecorder.Messages)
-	assert.Equal(t, []string{"starting command"}, infoRecorder.Messages)
+	assert.Equal(t, []string(nil), infoRecorder.Messages)
 }
 
 func TestLogcmdTimeout(t *testing.T) {

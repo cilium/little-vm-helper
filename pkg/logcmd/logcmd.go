@@ -37,12 +37,12 @@ func getLogfForLevel(log logrus.FieldLogger, lvl logrus.Level) Logf {
 	}
 }
 
-func logReader(ctx context.Context, logF Logf, file *os.File, log logrus.FieldLogger, prefix string) error {
+func logReader(ctx context.Context, logF Logf, file *os.File, prefix string) error {
 
 	if ctx != nil {
 		if deadline, ok := ctx.Deadline(); ok {
 			if err := file.SetDeadline(deadline); err != nil {
-				log.Warnf("ctx deadline (%v) will not be respected", deadline)
+				logF("ctx deadline (%v) will not be respected", deadline)
 			}
 		}
 	}
@@ -67,8 +67,7 @@ func logReader(ctx context.Context, logF Logf, file *os.File, log logrus.FieldLo
 func runAndLogCommand(
 	ctx context.Context,
 	cmd *exec.Cmd,
-	log logrus.FieldLogger,
-	stdoutLevel, stderrLevel logrus.Level,
+	logStdout, logStderr Logf,
 ) error {
 
 	// prepare pipes
@@ -84,12 +83,6 @@ func runAndLogCommand(
 	}
 	defer stdout.Close()
 
-	// start command
-	xlog := log.WithField("path", cmd.Path).WithField("args", cmd.Args)
-	if cwd, err := os.Getwd(); err == nil {
-		xlog = xlog.WithField("cwd", cwd)
-	}
-	xlog.Info("starting command")
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("failed to execute command: %w", err)
 	}
@@ -118,17 +111,17 @@ func runAndLogCommand(
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		err = logReader(ctx, getLogfForLevel(log, stdoutLevel), stdoutFile, log, "stdout> ")
+		err = logReader(ctx, logStdout, stdoutFile, "stdout> ")
 		if err != nil {
-			log.Warnf("failed to read from stdout: %v", err)
+			logStderr("failed to read from stdout: %v", err)
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		err = logReader(ctx, getLogfForLevel(log, stderrLevel), stderrFile, log, "stderr> ")
+		err = logReader(ctx, logStderr, stderrFile, "stderr> ")
 		if err != nil {
-			log.Warnf("failed to read from stderr: %v", err)
+			logStderr("failed to read from stdout: %v", err)
 		}
 	}()
 
@@ -147,7 +140,16 @@ func RunAndLogCommand(
 	cmd *exec.Cmd,
 	log logrus.FieldLogger,
 ) error {
-	return runAndLogCommand(nil, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+	return runAndLogCommand(nil, cmd, getLogfForLevel(log, logrus.InfoLevel), getLogfForLevel(log, logrus.WarnLevel))
+}
+
+func logStart(log logrus.FieldLogger, cmd *exec.Cmd) {
+	// start command
+	xlog := log.WithField("path", cmd.Path).WithField("args", cmd.Args)
+	if cwd, err := os.Getwd(); err == nil {
+		xlog = xlog.WithField("cwd", cwd)
+	}
+	xlog.Info("starting command")
 }
 
 func RunAndLogCommandContext(
@@ -157,7 +159,8 @@ func RunAndLogCommandContext(
 	cmdArgs ...string,
 ) error {
 	cmd := exec.CommandContext(ctx, cmd0, cmdArgs...)
-	return runAndLogCommand(ctx, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+	logStart(log, cmd)
+	return runAndLogCommand(ctx, cmd, getLogfForLevel(log, logrus.InfoLevel), getLogfForLevel(log, logrus.WarnLevel))
 }
 
 func RunAndLogCommandsContext(
@@ -165,13 +168,16 @@ func RunAndLogCommandsContext(
 	log logrus.FieldLogger, // we should have something more flexible/generic here
 	commands ...[]string,
 ) error {
+	stdoutLog := getLogfForLevel(log, logrus.InfoLevel)
+	stderrLog := getLogfForLevel(log, logrus.WarnLevel)
 	for i := range commands {
 		args := commands[i]
 		if len(args) == 0 {
 			return fmt.Errorf("command %d is empty", i)
 		}
 		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-		err := runAndLogCommand(ctx, cmd, log, logrus.InfoLevel, logrus.WarnLevel)
+		logStart(log, cmd)
+		err := runAndLogCommand(ctx, cmd, stdoutLog, stderrLog)
 		if err != nil {
 			return fmt.Errorf("command %d failed: %w", i, err)
 		}
