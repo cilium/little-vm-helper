@@ -200,11 +200,11 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 	}
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage"); err != nil {
-		return fmt.Errorf("buiding bzImage failed: %w", err)
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "-j", ncpus, "bzImage", "modules"); err != nil {
+		return fmt.Errorf("buiding bzImage && modules failed: %w", err)
 	}
 
-	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "dir-pkg"); err != nil {
+	if err := logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, "-C", srcDir, "tar-pkg"); err != nil {
 		return fmt.Errorf("build dir failed: %w", err)
 	}
 
