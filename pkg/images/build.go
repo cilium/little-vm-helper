@@ -50,11 +50,6 @@ func (f *ImageForest) BuildAllImages(bldConf *BuildConf) *BuilderResult {
 	log := bldConf.Log
 	st := newBuildState(f, bldConf)
 
-	if err := CheckEnvironment(); err != nil {
-		st.bldResult.Error = fmt.Errorf("environment check failed: %w", err)
-		return &st.bldResult
-	}
-
 	queue := f.RootImages()
 	log.WithFields(logrus.Fields{
 		"queue": strings.Join(queue, ","),

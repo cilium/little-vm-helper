@@ -19,10 +19,6 @@ func (tl testLogger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func init() {
-	ignoreEnviromentCheckForTesting = true
-}
-
 func TestImageBuilds(t *testing.T) {
 	xlog := logrus.New()
 	xlog.SetOutput(testLogger{t})
