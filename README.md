@@ -85,6 +85,7 @@ jq . < _data/images.json
   {
     "name": "k8s",
     "parent": "base",
+    "image_size": "20G",
     "packages": [
       "docker.io"
     ]
