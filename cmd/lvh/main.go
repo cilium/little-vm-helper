@@ -9,8 +9,9 @@ import (
 
 var (
 	rootCmd = &cobra.Command{
-		Use:   "lvh",
-		Short: "little-vm-helper -- helper to build and run VMs",
+		Use:          "lvh",
+		Short:        "little-vm-helper -- helper to build and run VMs",
+		SilenceUsage: true,
 	}
 )
 
