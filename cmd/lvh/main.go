@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/cilium/little-vm-helper/cmd/lvh/images"
 	"github.com/cilium/little-vm-helper/cmd/lvh/kernels"
+	"github.com/cilium/little-vm-helper/cmd/lvh/runner"
 
 	"github.com/spf13/cobra"
 )
@@ -19,6 +20,7 @@ func init() {
 	rootCmd.AddCommand(
 		images.ImagesCommand(),
 		kernels.KernelsCommand(),
+		runner.RunCommand(),
 	)
 }
 
