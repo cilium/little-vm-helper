@@ -30,7 +30,10 @@ func BuildCmd() *cobra.Command {
 			}
 
 			var cnf images.ImagesConf
-			cnf.Dir = imagesDir
+			cnf.Dir, err = filepath.Abs(imagesDir)
+			if err != nil {
+				return err
+			}
 			err = json.Unmarshal(configData, &cnf.Images)
 			if err != nil {
 				return err
