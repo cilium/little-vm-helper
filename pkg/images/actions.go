@@ -2,7 +2,9 @@ package images
 
 import (
 	"fmt"
+	"path/filepath"
 
+	"github.com/cilium/little-vm-helper/pkg/kernels"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 )
 
@@ -31,6 +33,8 @@ var actionOpInstances = []ActionOp{
 	&UploadCommand{},
 	&ChmodCommand{},
 	&AppendLineCommand{},
+	&LinkCommand{},
+	&InstallKernelCommand{},
 }
 
 type VirtCustomizeAction struct {
@@ -152,4 +156,55 @@ func (c *AppendLineCommand) ToSteps(s *StepConf) ([]multistep.Step, error) {
 		StepConf: s,
 		Args:     []string{"--append-line", fmt.Sprintf("%s:%s", c.File, c.Line)},
 	}}, nil
+}
+
+// LinkCommand
+type LinkCommand struct {
+	Target string
+	Link   string
+}
+
+func (c *LinkCommand) ActionOpName() string {
+	return "link"
+}
+
+func (c *LinkCommand) ToSteps(s *StepConf) ([]multistep.Step, error) {
+	return []multistep.Step{&VirtCustomizeStep{
+		StepConf: s,
+		Args:     []string{"--link", fmt.Sprintf("%s:%s", c.Target, c.Link)},
+	}}, nil
+}
+
+// InstallKernelCommand
+type InstallKernelCommand struct {
+	KernelInstallDir string
+}
+
+func (c *InstallKernelCommand) ActionOpName() string {
+	return "install-kernel"
+}
+
+func (c *InstallKernelCommand) ToSteps(s *StepConf) ([]multistep.Step, error) {
+	installDir := c.KernelInstallDir
+	// NB(kkourt): quick hack for having a proper (independent of base
+	// directory) relative path for install dirs. Should figure out
+	// something cleaner.
+	if !filepath.IsAbs(installDir) {
+		d, err := filepath.Abs(filepath.Join(s.imagesDir, "..", c.KernelInstallDir))
+		if err == nil {
+			installDir = d
+		}
+	}
+	kernel, err := kernels.FindKernel(installDir)
+	if err != nil {
+		return nil, err
+	}
+	kernelPath := filepath.Join("/", kernel)
+	return []multistep.Step{
+		// boot files, configs, etc.
+		&VirtCustomizeStep{StepConf: s, Args: []string{"--copy-in", fmt.Sprintf("%s/boot:/", installDir)}},
+		// modules
+		&VirtCustomizeStep{StepConf: s, Args: []string{"--copy-in", fmt.Sprintf("%s/lib:/", installDir)}},
+		&VirtCustomizeStep{StepConf: s, Args: []string{"--link", fmt.Sprintf("%s:%s", kernelPath, "/vmlinuz")}},
+	}, nil
 }
