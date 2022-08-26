@@ -24,6 +24,7 @@ func TestImageBuilds(t *testing.T) {
 	xlog.SetOutput(testLogger{t})
 
 	tests := []struct {
+		image        string // if empty, build all images
 		confs        []ImgConf
 		prepare      func(imagesDir string)
 		test         func(imagesDir string, res *BuilderResult)
@@ -128,6 +129,35 @@ func TestImageBuilds(t *testing.T) {
 				assert.NotEqual(t, "", r.ImageResults["base"].CachedImageDeleted)
 			},
 			forceRebuild: true,
+		}, {
+			confs: []ImgConf{
+				{Name: "base"},
+				{Name: "image1", Parent: "base"},
+				{Name: "image2", Parent: "image1"},
+			},
+			prepare: func(dir string) {
+				fname := filepath.Join(dir, "image1")
+				f, err := os.Create(fname)
+				assert.Nil(t, err)
+				defer f.Close()
+			},
+			image: "image1",
+			test: func(dir string, r *BuilderResult) {
+				assert.Nil(t, r.Err())
+				assert.Equal(t, 2, len(r.ImageResults))
+
+				assert.False(t, r.ImageResults["base"].CachedImageUsed)
+				assert.Equal(t, "", r.ImageResults["base"].CachedImageDeleted)
+				assert.FileExists(t, filepath.Join(dir, "base"))
+
+				assert.False(t, r.ImageResults["image1"].CachedImageUsed)
+				assert.NotEqual(t, "", r.ImageResults["image1"].CachedImageDeleted)
+				assert.FileExists(t, filepath.Join(dir, "image1"))
+
+				_, ok := r.ImageResults["image2"]
+				assert.False(t, ok)
+				assert.NoFileExists(t, filepath.Join(dir, "image2"))
+			},
 		},
 	}
 
@@ -155,7 +185,13 @@ func TestImageBuilds(t *testing.T) {
 			ib, err := NewImageForest(conf, false)
 			assert.Nil(t, err)
 			bldConf.ForceRebuild = test.forceRebuild
-			res := ib.BuildAllImages(&bldConf)
+			var res *BuilderResult
+			if test.image == "" {
+				res = ib.BuildAllImages(&bldConf)
+			} else {
+				res, err = ib.BuildImage(&bldConf, test.image)
+				assert.Nil(t, err)
+			}
 			test.test(imagesDir, res)
 		}()
 	}
