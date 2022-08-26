@@ -3,6 +3,8 @@ package kernels
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // directoryExists returns:
@@ -37,4 +39,37 @@ func regularFileExists(fname string) (bool, error) {
 	}
 
 	return false, fmt.Errorf("error accessing `%s`: %w", fname, err)
+}
+
+func FindKernel(installDir string) (string, error) {
+	prefix := "vmlinuz-"
+
+	dir := filepath.Join(installDir, "boot")
+	dentries, err := os.ReadDir(dir)
+	if err != nil {
+		cwd, _ := os.Getwd()
+		return "", fmt.Errorf("failed to reading dir: %v (working dir: %s)", err, cwd)
+	}
+
+	kernels := make([]string, 0, 1)
+	for _, dentry := range dentries {
+		if !dentry.Type().IsRegular() {
+			continue
+		}
+
+		fname := dentry.Name()
+		if !strings.HasPrefix(fname, prefix) {
+			continue
+		}
+
+		kernels = append(kernels, fname)
+	}
+
+	if len(kernels) == 0 {
+		return "", fmt.Errorf("no kernel found in '%s'", dir)
+	} else if len(kernels) > 1 {
+		return "", fmt.Errorf("unhandled case: multiple kernels found in '%s'. TODO: sort them lexicographically and pick the latest", dir)
+	}
+
+	return filepath.Join("boot", kernels[0]), nil
 }
