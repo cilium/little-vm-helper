@@ -44,9 +44,8 @@ type BuilderResult struct {
 }
 
 // BuildAllImages will build all images in the forest. It will start from the
-// leafs, and work its way up.
+// roots, and work its way down.
 func (f *ImageForest) BuildAllImages(bldConf *BuildConf) *BuilderResult {
-
 	log := bldConf.Log
 	st := newBuildState(f, bldConf)
 
