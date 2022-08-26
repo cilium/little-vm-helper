@@ -44,12 +44,12 @@ func TestImageBuilderConfs(t *testing.T) {
 				assert.NotNil(t, f)
 				assert.Nil(t, err)
 				{
-					deps, err := f.getDependencies("image1")
+					deps, err := f.Dependencies("image1")
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base"})
 				}
 				{
-					deps, err := f.getDependencies("image2")
+					deps, err := f.Dependencies("image2")
 					assert.Nil(t, err, "unexpected error: %v", err)
 					assert.Equal(t, deps, []string{"base", "image1"})
 				}
