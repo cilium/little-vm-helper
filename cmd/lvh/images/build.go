@@ -14,7 +14,7 @@ import (
 
 func BuildCmd() *cobra.Command {
 	var dirName, imageName string
-	var forceRebuild, dryRun bool
+	var forceRebuild, dryRun, mergeSteps bool
 
 	cmd := &cobra.Command{
 		Use:   "build",
@@ -49,6 +49,7 @@ func BuildCmd() *cobra.Command {
 				Log:          log,
 				DryRun:       dryRun,
 				ForceRebuild: forceRebuild,
+				MergeSteps:   mergeSteps,
 			}
 			start := time.Now()
 			if imageName == "" {
@@ -84,5 +85,6 @@ func BuildCmd() *cobra.Command {
 	cmd.MarkFlagRequired("dir")
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
+	cmd.Flags().BoolVar(&mergeSteps, "merge-steps", true, "Merge steps when possible to improve performance. Disabling this might be useufl to investigate action issues.")
 	return cmd
 }
