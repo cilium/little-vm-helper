@@ -13,7 +13,7 @@ import (
 )
 
 func BuildCmd() *cobra.Command {
-	var dirName string
+	var dirName, imageName string
 	var forceRebuild, dryRun bool
 
 	cmd := &cobra.Command{
@@ -41,12 +41,22 @@ func BuildCmd() *cobra.Command {
 				return err
 			}
 
-			start := time.Now()
-			res := forest.BuildAllImages(&images.BuildConf{
+			var res *images.BuilderResult
+			bldConf := &images.BuildConf{
 				Log:          log,
 				DryRun:       dryRun,
 				ForceRebuild: forceRebuild,
-			})
+			}
+			start := time.Now()
+			if imageName == "" {
+				res = forest.BuildAllImages(bldConf)
+			} else {
+				res, err = forest.BuildImage(bldConf, imageName)
+				if err != nil {
+					log.WithField("image", imageName).WithError(err).Error("error bulding image")
+					return err
+				}
+			}
 			elapsed := time.Since(start)
 
 			err = res.Err()
@@ -67,6 +77,7 @@ func BuildCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&dirName, "dir", "", "directory to keep the images (configuration will be saved in <dir>/images.json and images in <dir>/images)")
+	cmd.Flags().StringVar(&imageName, "image", "", "image to build. If empty, all images will be build.")
 	cmd.MarkFlagRequired("dir")
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
