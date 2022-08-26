@@ -156,6 +156,7 @@ func (f *ImageForest) getParent(image string) string {
 	return cnf.Parent
 }
 
+// RootImages are the images which do not have dependencies (i.e., no parents)
 func (f *ImageForest) RootImages() []string {
 	ret := make([]string, 0)
 	for i, cnf := range f.confs {
