@@ -204,7 +204,7 @@ func (c *InstallKernelCommand) ToSteps(s *StepConf) ([]multistep.Step, error) {
 		// boot files, configs, etc.
 		&VirtCustomizeStep{StepConf: s, Args: []string{"--copy-in", fmt.Sprintf("%s/boot:/", installDir)}},
 		// modules
-		&VirtCustomizeStep{StepConf: s, Args: []string{"--copy-in", fmt.Sprintf("%s/lib:/", installDir)}},
+		&VirtCustomizeStep{StepConf: s, Args: []string{"--copy-in", fmt.Sprintf("%s/lib/modules:/lib/", installDir)}},
 		&VirtCustomizeStep{StepConf: s, Args: []string{"--link", fmt.Sprintf("%s:%s", kernelPath, "/vmlinuz")}},
 	}, nil
 }
