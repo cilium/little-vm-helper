@@ -23,6 +23,8 @@ type RunConf struct {
 	Logger *logrus.Logger
 
 	HostMount string
+
+	SerialPort int
 }
 
 func (rc *RunConf) testImageFname() string {
