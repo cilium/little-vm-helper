@@ -54,6 +54,7 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().BoolVar(&rcnf.Daemonize, "daemonize", false, "daemonize QEMU after initializing")
 	cmd.Flags().StringVar(&rcnf.HostMount, "host-mount", "", "Mount the specified host directory in the VM using a 'host_mount' tag")
 	cmd.Flags().StringArrayVarP(&ports, "port", "p", nil, "Forward a port (hostport[:vmport[:tcp|udp]])")
+	cmd.Flags().IntVar(&rcnf.SerialPort, "serial-port", 0, "Port for serial console")
 
 	return cmd
 }
