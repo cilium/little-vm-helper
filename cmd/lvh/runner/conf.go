@@ -25,6 +25,9 @@ type RunConf struct {
 	HostMount string
 
 	SerialPort int
+
+	CPU int
+	Mem string
 }
 
 func (rc *RunConf) testImageFname() string {

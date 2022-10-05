@@ -55,6 +55,8 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().StringVar(&rcnf.HostMount, "host-mount", "", "Mount the specified host directory in the VM using a 'host_mount' tag")
 	cmd.Flags().StringArrayVarP(&ports, "port", "p", nil, "Forward a port (hostport[:vmport[:tcp|udp]])")
 	cmd.Flags().IntVar(&rcnf.SerialPort, "serial-port", 0, "Port for serial console")
+	cmd.Flags().IntVar(&rcnf.CPU, "cpu", 2, "CPU count (-smp)")
+	cmd.Flags().StringVar(&rcnf.Mem, "mem", "4G", "RAM size (-m)")
 
 	return cmd
 }
