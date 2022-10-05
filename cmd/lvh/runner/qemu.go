@@ -17,7 +17,7 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 		// don't reboot, just exit
 		"-no-reboot",
 		// cpus, memory
-		"-smp", "2", "-m", "4G",
+		"-smp", fmt.Sprintf("%d", rcnf.CPU), "-m", rcnf.Mem,
 	}
 
 	// quick-and-dirty kvm detection
