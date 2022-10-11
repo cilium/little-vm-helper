@@ -23,7 +23,7 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	// quick-and-dirty kvm detection
 	if !rcnf.DisableKVM {
 		if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {
-			qemuArgs = append(qemuArgs, "-enable-kvm", "-cpu", "kvm64")
+			qemuArgs = append(qemuArgs, "-enable-kvm", "-cpu", rcnf.CPUKind)
 			f.Close()
 		} else {
 			log.Info("KVM disabled")

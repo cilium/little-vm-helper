@@ -28,6 +28,8 @@ type RunConf struct {
 
 	CPU int
 	Mem string
+	// Kind of CPU to use (e.g. host or kvm64)
+	CPUKind string
 }
 
 func (rc *RunConf) testImageFname() string {
