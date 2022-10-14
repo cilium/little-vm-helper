@@ -58,6 +58,7 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().IntVar(&rcnf.CPU, "cpu", 2, "CPU count (-smp)")
 	cmd.Flags().StringVar(&rcnf.Mem, "mem", "4G", "RAM size (-m)")
 	cmd.Flags().StringVar(&rcnf.CPUKind, "cpu-kind", "kvm64", "CPU kind to use (-cpu), has no effect when KVM is disabled")
+	cmd.Flags().IntVar(&rcnf.QemuMonitorPort, "qemu-monitor-port", 0, "Port for QEMU monitor")
 
 	return cmd
 }
