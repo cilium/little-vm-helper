@@ -79,10 +79,12 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 		qemuArgs = append(qemuArgs, "-monitor", arg)
 	}
 
-	qemuArgs = append(qemuArgs,
-		"-fsdev", fmt.Sprintf("local,id=host_id,path=%s,security_model=none", rcnf.HostMount),
-		"-device", "virtio-9p-pci,fsdev=host_id,mount_tag=host_mount",
-	)
+	if len(rcnf.HostMount) > 0 {
+		qemuArgs = append(qemuArgs,
+			"-fsdev", fmt.Sprintf("local,id=host_id,path=%s,security_model=none", rcnf.HostMount),
+			"-device", "virtio-9p-pci,fsdev=host_id,mount_tag=host_mount",
+		)
+	}
 
 	return qemuArgs, nil
 }
