@@ -16,6 +16,9 @@ import (
 var (
 	// DelImageIfExists: if set to true, image will be deleted at Cleanup() by the CreateImage step
 	DelImageIfExists = "DelImageIfExist"
+
+	rootDev    = "/dev/sda"
+	rootFsType = "ext4"
 )
 
 // Approach for creating images:
@@ -55,14 +58,14 @@ func NewCreateImage(cnf *StepConf) *CreateImage {
 	}
 }
 
-var extLinuxConf = `
+var extLinuxConf = fmt.Sprintf(`
 default linux
 timeout 0
 
 label linux
 kernel /vmlinuz
-append initrd=initrd.img root=/dev/sda rw console=ttyS0
-`
+append initrd=initrd.img root=%s rw console=ttyS0
+`, rootDev)
 
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
@@ -112,13 +115,13 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 		cmd = exec.CommandContext(ctx, GuestFish,
 			"-N", fmt.Sprintf("%s=disk:%s", imgFname, imgSize),
 			"--",
-			"part-disk", "/dev/sda", "mbr",
+			"part-disk", rootDev, "mbr",
 			":",
-			"part-set-bootable", "/dev/sda", "1", "true",
+			"part-set-bootable", rootDev, "1", "true",
 			":",
-			"mkfs", "ext4", "/dev/sda",
+			"mkfs", rootFsType, rootDev,
 			":",
-			"mount", "/dev/sda", "/",
+			"mount", rootDev, "/",
 			":",
 			"tar-in", tarFname, "/",
 			":",
@@ -130,9 +133,9 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 		cmd = exec.CommandContext(ctx, GuestFish,
 			"-N", fmt.Sprintf("%s=disk:%s", imgFname, imgSize),
 			"--",
-			"mkfs", "ext4", "/dev/sda",
+			"mkfs", rootFsType, rootDev,
 			":",
-			"mount", "/dev/sda", "/",
+			"mount", rootDev, "/",
 			":",
 			"tar-in", tarFname, "/",
 		)
