@@ -11,6 +11,7 @@ import (
 
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -19,6 +20,7 @@ var (
 
 	rootDev    = "/dev/sda"
 	rootFsType = "ext4"
+	resizeFS   = "resize2fs"
 )
 
 // Approach for creating images:
@@ -67,6 +69,7 @@ kernel /vmlinuz
 append initrd=initrd.img root=%s rw console=ttyS0
 `, rootDev)
 
+// makeRootImage creates a root (with respect to the image forest hierarch) image
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
@@ -159,6 +162,35 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 
 }
 
+func resizeImage(ctx context.Context,
+	log logrus.FieldLogger,
+	imgFname string, size string,
+) error {
+
+	// resize image
+	cmd := exec.CommandContext(ctx, QemuImg, "resize", imgFname, size)
+	err := logcmd.RunAndLogCommand(cmd, log)
+	if err != nil {
+		return err
+	}
+
+	// resize filesystem
+	cmd = exec.CommandContext(ctx, GuestFish,
+		"-a", imgFname,
+		"--",
+		"run",
+		":",
+		resizeFS,
+		rootDev,
+	)
+	err = logcmd.RunAndLogCommand(cmd, log)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// makeDerivedImage creates a non-root image
 func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
 	parFname := filepath.Join(s.imagesDir, s.imgCnf.Parent)
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
@@ -170,6 +202,16 @@ func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
 	err := logcmd.RunAndLogCommand(cmd, s.log)
 	if err != nil {
 		return err
+	}
+
+	// We could check whether the image is the same, but this is tricky.
+	// The configuration of the parent does not always exist, so we would
+	// have to check the current size of the image. To make life easier, we
+	// always resize if the user defines a size.
+	if size := s.imgCnf.ImageSize; size != "" {
+		if err := resizeImage(ctx, s.log, imgFname, size); err != nil {
+			return err
+		}
 	}
 
 	if len(s.imgCnf.Packages) > 0 {
