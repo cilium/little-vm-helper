@@ -43,7 +43,7 @@ runs:
       shell: bash
       run: |
         if [ -f "/bin/lvh" ]; then
-          echo '::set-output name=skip::true'
+          echo 'skip=true' >> $GITHUB_OUTPUT
         fi
 
     - name: Install LVH cli
@@ -54,7 +54,7 @@ runs:
         docker cp $cid:/usr/bin/lvh /bin/lvh
         docker rm $cid
 
-    - uses: actions/cache@fd5de65bc895cf536527842281bea11763fefd77
+    - uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
