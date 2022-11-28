@@ -92,5 +92,8 @@ runs:
       run: |
          ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
          set -eu
+
+         echo 'nameserver 1.1.1.1' > /etc/resolv.conf
+
          ${{ inputs.cmd }}
          EOF
