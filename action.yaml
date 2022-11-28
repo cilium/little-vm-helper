@@ -91,5 +91,6 @@ runs:
       shell: bash
       run: |
          ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
+         set -eu
          ${{ inputs.cmd }}
          EOF
