@@ -34,6 +34,14 @@ inputs:
     description: 'Serial port to access VM'
     required: true
     default: 0
+  cpu:
+    description: 'CPU count'
+    required: true
+    default: 8
+  mem:
+    description: 'RAM size'
+    required: true
+    default: '6G'
 runs:
   using: "composite"
   steps:
@@ -85,7 +93,9 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       shell: bash
       run: |
-        /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }}
+        /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
+            --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
+            --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }}
 
     - name: Run test cmd in VM
       shell: bash
