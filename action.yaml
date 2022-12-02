@@ -33,6 +33,9 @@ inputs:
   dns-resolver:
     description: 'Set DNS resolver in /etc/resolv.conf of a VM'
     required: false
+  install-dependencies:
+    description: 'Install QEMU dependencies (Debian/Ubuntu)'
+    default: 'false'
   serial-port:
     description: 'Serial port to access VM'
     required: true
@@ -62,8 +65,18 @@ runs:
       shell: bash
       run: |
         cid=$(docker create quay.io/lvh-images/lvh:${{ inputs.lvh-version }})
-        docker cp $cid:/usr/bin/lvh /bin/lvh
+        docker cp $cid:/usr/bin/lvh /tmp/lvh
         docker rm $cid
+        chmod +x /tmp/lvh
+        sudo mv /tmp/lvh /bin/lvh
+
+    - name: Install dependencies
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager
+        sudo kvm-ok
 
     - uses: actions/cache@9b0c1fce7a93df8e3bb8926b0d6e9d89e92f20a7
       if: ${{ inputs.provision == 'true' }}
@@ -82,7 +95,7 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        mkdir /_images
+        sudo mkdir /_images; sudo chmod 777 /_images
         docker run -v /_images:/mnt/images quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} cp /data/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst /mnt/images
 
     - name: Prepare VM image
@@ -96,7 +109,7 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       shell: bash
       run: |
-        /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
+        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }}
 
