@@ -15,7 +15,7 @@ inputs:
   lvh-version:
     description: 'LVH cli version (Docker tag)'
     required: true
-    default: 'v0.0.2'
+    default: 'v0.0.3'
   cmd:
     description: 'Commands to run in a VM'
     required: true
