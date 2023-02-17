@@ -52,6 +52,9 @@ inputs:
     description: 'CPU kind to use'
     required: true
     default: 'host'
+  kernel:
+    description: 'Path to kernel image to boot with'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -113,9 +116,14 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       shell: bash
       run: |
+        extraArgs=()
+        if [ -z "${{ inputs.kernel }}" ]; then
+          extraArgs+=("--kernel" "${{ inputs.kernel }}")
+        fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
-            --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }}
+            --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
+            ${extraArgs}[@]
 
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
