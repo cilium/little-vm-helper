@@ -16,6 +16,10 @@ little-vm-helper: FORCE
 image:
 	$(DOCKER) build -f Dockerfile -t $(OCIREPO) .
 
+.PHONY: install
+install:
+	CGO_ENABLED=0 $(GO) install ./cmd/lvh
+
 clean:
 	rm -f lvh
 FORCE:
