@@ -6,10 +6,10 @@ package runner
 import (
 	"fmt"
 	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"
@@ -31,7 +31,7 @@ func RunCommand() *cobra.Command {
 
 			rcnf.Logger = logrus.New()
 
-			rcnf.ForwardedPorts, err = parsePorts(ports)
+			rcnf.ForwardedPorts, err = runner.ParsePortForward(ports)
 			if err != nil {
 				return fmt.Errorf("Port flags: %w", err)
 			}
@@ -64,62 +64,6 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().IntVar(&rcnf.QemuMonitorPort, "qemu-monitor-port", 0, "Port for QEMU monitor")
 
 	return cmd
-}
-
-func parsePorts(flags []string) ([]PortForward, error) {
-	var forwards []PortForward
-	for _, flag := range flags {
-		hostPortStr, vmPortAndProto, found := strings.Cut(flag, ":")
-		if !found {
-			hostPort, err := strconv.Atoi(flag)
-			if err != nil {
-				return nil, fmt.Errorf("'%s' is not a valid port number", flag)
-			}
-			forwards = append(forwards, PortForward{
-				HostPort: hostPort,
-				VMPort:   hostPort,
-				Protocol: "tcp",
-			})
-			continue
-		}
-
-		hostPort, err := strconv.Atoi(hostPortStr)
-		if err != nil {
-			return nil, fmt.Errorf("'%s' is not a valid port number", hostPortStr)
-		}
-
-		vmPortStr, proto, found := strings.Cut(vmPortAndProto, ":")
-		if !found {
-			vmPort, err := strconv.Atoi(vmPortAndProto)
-			if err != nil {
-				return nil, fmt.Errorf("'%s' is not a valid port number", vmPortAndProto)
-			}
-			forwards = append(forwards, PortForward{
-				HostPort: hostPort,
-				VMPort:   vmPort,
-				Protocol: "tcp",
-			})
-			continue
-		}
-
-		vmPort, err := strconv.Atoi(vmPortStr)
-		if err != nil {
-			return nil, fmt.Errorf("'%s' is not a valid port number", vmPortStr)
-		}
-
-		proto = strings.ToLower(proto)
-		if proto != "tcp" && proto != "udp" {
-			return nil, fmt.Errorf("port forward protocol must be tcp or udp")
-		}
-
-		forwards = append(forwards, PortForward{
-			HostPort: hostPort,
-			VMPort:   vmPort,
-			Protocol: proto,
-		})
-	}
-
-	return forwards, nil
 }
 
 const qemuBin = "qemu-system-x86_64"

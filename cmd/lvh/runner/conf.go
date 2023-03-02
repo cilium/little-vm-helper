@@ -4,6 +4,7 @@
 package runner
 
 import (
+	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,7 +22,7 @@ type RunConf struct {
 
 	// Disable the network connection to the VM
 	DisableNetwork bool
-	ForwardedPorts []PortForward
+	ForwardedPorts runner.PortForwards
 
 	Logger *logrus.Logger
 
@@ -39,10 +40,4 @@ type RunConf struct {
 
 func (rc *RunConf) testImageFname() string {
 	return rc.Image
-}
-
-type PortForward struct {
-	HostPort int
-	VMPort   int
-	Protocol string
 }

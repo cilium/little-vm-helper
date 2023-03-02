@@ -57,15 +57,7 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	}
 
 	if !rcnf.DisableNetwork {
-		netdev := "user,id=user.0"
-		for _, fwd := range rcnf.ForwardedPorts {
-			netdev = fmt.Sprintf("%s,hostfwd=%s::%d-:%d", netdev, fwd.Protocol, fwd.HostPort, fwd.VMPort)
-		}
-
-		qemuArgs = append(qemuArgs,
-			"-netdev", netdev,
-			"-device", "virtio-net-pci,netdev=user.0",
-		)
+		qemuArgs = append(qemuArgs, rcnf.ForwardedPorts.QemuArgs()...)
 	}
 
 	if !rcnf.Daemonize {
