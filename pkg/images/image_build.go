@@ -66,8 +66,18 @@ func (f *ImageForest) doBuildImage(
 	steps[0] = NewCreateImage(stepConf)
 	// NB: We might need an --chdir option or similar, but for now just
 	// chdir to the the base dir.
-	baseDir := filepath.Dir(f.imagesDir)
+	baseDir, path := filepath.Split(f.imagesDir)
 	steps[1] = NewChdirStep(stepConf, baseDir)
+
+	// NB: after the chroot, we need to also change the images dir if it is a relative path for
+	// the subsequent steps.
+	if !filepath.IsAbs(stepConf.imagesDir) {
+		stepConf = &StepConf{
+			imagesDir: path,
+			imgCnf:    cnf,
+			log:       log,
+		}
+	}
 
 	for i := 0; i < len(cnf.Actions); i++ {
 		nextSteps, err := cnf.Actions[i].Op.ToSteps(stepConf)
