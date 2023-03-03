@@ -8,8 +8,7 @@ as being storage efficient are the main goals.
 
 It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/).
 
-Configurations for specific images used in the Cilium project can be found in:
-https://github.com/cilium/little-vm-helper-images.
+Configurations for specific images used in the Cilium project can be found in [little-vm-helper-image](https://github.com/cilium/little-vm-helper-images).
 
 ## Usage
 
@@ -149,17 +148,16 @@ go run cmd/lvh --image _data/images/base.qcow2 --qemu-disable-kvm
 ### Why not use packer to build images?
 
 Existing packer builders
-(e.g,.https://github.com/cilium/packer-ci-build/blob/710ad61e7d5b0b6872770729a30bcdade2ee1acb/cilium-ubuntu.json#L19,
-https://www.packer.io/plugins/builders/qemu) are meant to manage VMs with
+(e.g, [packer-ci-build/cilium-ubuntu.json](https://github.com/cilium/packer-ci-build/blob/710ad61e7d5b0b6872770729a30bcdade2ee1acb/cilium-ubuntu.json#L19),
+[qemu](https://www.packer.io/plugins/builders/qemu)) are meant to manage VMs with
 longer lifetimes than a single use, and use facilities that introduce unnecessary overhead for our use-case.
 
 Also, packer does not seem to have a way to provision images without booting a
 machine. There is an outdated chroot package
-https://github.com/summerwind/packer-builder-qemu-chroot, and cloud chroot builders
-(e.g., https://www.packer.io/plugins/builders/amazon/chroot that uses https://github.com/hashicorp/packer-plugin-sdk/tree/main/chroot).
+[packer-builder-qemu-chroot](https://github.com/summerwind/packer-builder-qemu-chroot), and cloud chroot builders
+(e.g., [AMI Builder (chroot)](https://www.packer.io/plugins/builders/amazon/chroot) that uses [packer-plugin-sdk/chroot](https://github.com/hashicorp/packer-plugin-sdk/tree/main/chroot)).
 
-That being said, if we need packer functionality we can create a packer plugin
-(https://www.packer.io/docs/plugins/creation#developing-plugins).
+That being said, if we need packer functionality we can create a packer plugin [developing-plugins](https://www.packer.io/docs/plugins/creation#developing-plugins).
 
 ### Why not use vagrant (or libvirt-based tools)?
 
@@ -179,11 +177,10 @@ and storage.
  - [x] kernels: add suport for buidling kernels
  - [x] runner: qemu runner wrapper
  - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
- - [ ] improve boot time: minimal init, use qemu microvm (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html, https://mergeboard.com/blog/2-qemu-microvm-docker/)
+ - [ ] improve boot time: minimal init, use qemu microvm ([microvm](https://qemu.readthedocs.io/en/latest/system/i386/microvm.html), [QEMU MicroVMs](https://mergeboard.com/blog/2-qemu-microvm-docker/))
  - [ ] images: on a failed run, save everything in a image-failed-$(date) directory
- - [ ] use `guestfish --listen` (see
-   https://github.com/libbpf/ci/blob/cbb3b92facbad705bbb619b496d0debb4b3d806f/prepare-rootfs/run.sh#L345)
+ - [ ] use `guestfish --listen` (see [prepare-rootfs/run.sh](https://github.com/libbpf/ci/blob/cbb3b92facbad705bbb619b496d0debb4b3d806f/prepare-rootfs/run.sh#L345))
 
 ## Notes
 
-- earlier attempt: https://github.com/kkourt/kvm-dev-scripts
+- earlier attempt: [kkourt/kvm-dev-scripts](https://github.com/kkourt/kvm-dev-scripts)
