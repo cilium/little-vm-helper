@@ -36,8 +36,8 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/hashicorp/packer-plugin-sdk v0.3.0 h1:G4Uze/85X3n6c+8DawHdxptOZ0vHOeJ2LAAhBFLjYmg=
-github.com/hashicorp/packer-plugin-sdk v0.3.0/go.mod h1:bqpbL7w5Ee2QWrUyAsZI/MdCYpw15ls4mxgn9Ei2DZc=
+github.com/hashicorp/packer-plugin-sdk v0.3.4 h1:fmcHQtCGVa4tY2zeu/UffUHz0f3Y5RYc0OgR4XWf5oA=
+github.com/hashicorp/packer-plugin-sdk v0.3.4/go.mod h1:XZRvL9kRqJJtB6rf9Lu2zWLJbf2/4ImWXDjp9O9UQGE=
 github.com/imdario/mergo v0.3.13 h1:lFzP57bqS/wsqKssCGmtLAb8A0wKjLGrve2q3PPVcBk=
 github.com/imdario/mergo v0.3.13/go.mod h1:4lJ1jqUDcsbIECGy0RUJAXNIhg+6ocWgb1ALK2O4oXg=
 github.com/inconshreveable/mousetrap v1.0.1 h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7Pgzkat/bFNc=
