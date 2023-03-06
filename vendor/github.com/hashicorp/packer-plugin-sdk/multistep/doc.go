@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 multistep is a Go library for building up complex actions using discrete,
 individual "steps." These steps are strung together and run in sequence

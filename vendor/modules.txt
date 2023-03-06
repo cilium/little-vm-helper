@@ -116,8 +116,8 @@ github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.1.1
 ## explicit; go 1.13
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/packer-plugin-sdk v0.3.0
-## explicit; go 1.17
+# github.com/hashicorp/packer-plugin-sdk v0.3.4
+## explicit; go 1.18
 github.com/hashicorp/packer-plugin-sdk/multistep
 # github.com/imdario/mergo v0.3.13
 ## explicit; go 1.13
