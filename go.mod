@@ -6,7 +6,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/packer-plugin-sdk v0.3.4
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.1
 	golang.org/x/sys v0.5.0
