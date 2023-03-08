@@ -1,7 +1,7 @@
 ##  little-vm-helper
 
 little-vm-helper (lvh) is a VM management tool, aimed for testing and development of features that
-depend on the kernel, such as BPF. It is used in [cilium](https://github.com/cilium/cilium), 
+depend on the kernel, such as BPF. It is used in [cilium](https://github.com/cilium/cilium),
 [tetragon](https://github.com/cilium/teragon), and [pwru](https://github.com/cilium/pwru). It can also be used for kernel development. It is not
 meant, and should not be used for running production VMs. Fast booting and image building, as well
 as being storage efficient are the main goals.
@@ -25,8 +25,8 @@ LVH can be used to:
 Build example images:
 ```bash
 $ mkdir _data
-$ go run cmd/lvh images example-config > _data/images.json
-$ go run cmd/lvh images build --dir _data/images # this may require sudo as relies on /dev/kvm
+$ go run ./cmd/lvh images example-config > _data/images.json
+$ go run ./cmd/lvh images build --dir _data # this may require sudo as relies on /dev/kvm
 ```
 
 The first command will create a configuration file:
@@ -83,12 +83,12 @@ $ ls -sh1 _data/images/*.img
 
 ```bash
 $ mkdir -p _data/kernels
-$ go run cmd/lvh kernels --dir _data init
-$ go run cmd/lvh kernels --dir _data add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
-$ go run cmd/lvh kernels --dir _datas build bpf-next
+$ go run ./cmd/lvh kernels --dir _data init
+$ go run ./cmd/lvh kernels --dir _data add bpf-next git://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git --fetch
+$ go run ./cmd/lvh kernels --dir _data build bpf-next
 ```
 
-The configuration file keeps the url for a kernel, togther with its configuration options:
+The configuration file keeps the url for a kernel, together with its configuration options:
 ```jsonc
 $ jq . < _data/kernel.json
 {
@@ -111,9 +111,9 @@ $ jq . < _data/kernel.json
 There are options that are applied to all kernels (`common_opts`) as well as
 kernel-specific options.
 
-The kernels are kept in [worktrees](https://git-scm.com/docs/git-worktree). Specifically, There is a
+The kernels are kept in [worktrees](https://git-scm.com/docs/git-worktree). Specifically, there is a
 git bare directory (`git`) that holds all the objects, and one worktree per kernel. This allows
-efficient fetching and, also, having each kernel on its own seperate directory.
+efficient fetching and, also, having each kernel on its own separate directory.
 
 For example:
 ```bash
@@ -131,17 +131,17 @@ You can use the `run` subcommand to start images.
 
 For example:
 ```bash
-go run cmd/lvh --image _data/images/base.qcow2 --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
+go run ./cmd/lvh run --image _data/images/base.qcow2 --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
 ```
 
 Or, to with the kernel installed in the image:
 ```bash
-go run cmd/lvh --image _data/images/base.qcow2
+go run ./cmd/lvh run --image _data/images/base.qcow2
 ```
 
 **Note**: Building images and kernels is only supported on Linux. On the other hand, images and kernels already build on Linux can be booted in MacOS (both x86 and Arm). The only requirement is ```qemu-system-x86_64```. As MacOS does not support KVM, the commands to boot images are:
 ```bash
-go run cmd/lvh --image _data/images/base.qcow2 --qemu-disable-kvm
+go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
 ```
 
 ## FAQ
@@ -176,7 +176,7 @@ and storage.
    - [x] e2e tests (kind)
  - [x] images: docker image with required binaries (libguestfs, mmdebstrap, etc.) to run the tool
         - [x]  is that possible? libguestfs needs to boot a mini-VM
- - [x] kernels: add suport for buidling kernels
+ - [x] kernels: add support for building kernels
  - [x] runner: qemu runner wrapper
  - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
  - [ ] improve boot time: minimal init, use qemu microvm (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html, https://mergeboard.com/blog/2-qemu-microvm-docker/)
