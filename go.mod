@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/packer-plugin-sdk v0.3.4
+	github.com/hashicorp/packer-plugin-sdk v0.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.1
@@ -34,7 +34,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
-	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/net v0.8.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
