@@ -85,7 +85,7 @@ runs:
         sudo apt install -y cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager
         sudo kvm-ok
 
-    - uses: actions/cache@940f3d7cf195ba83374c77632d1e2cbb2f24ae68
+    - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
