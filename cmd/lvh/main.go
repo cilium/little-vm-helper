@@ -4,6 +4,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/cilium/little-vm-helper/cmd/lvh/images"
 	"github.com/cilium/little-vm-helper/cmd/lvh/kernels"
 	"github.com/cilium/little-vm-helper/cmd/lvh/runner"
@@ -28,5 +30,7 @@ func init() {
 }
 
 func main() {
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
