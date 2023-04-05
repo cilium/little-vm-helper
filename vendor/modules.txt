@@ -122,7 +122,7 @@ github.com/hashicorp/packer-plugin-sdk/multistep
 # github.com/imdario/mergo v0.3.13
 ## explicit; go 1.13
 github.com/imdario/mergo
-# github.com/inconshreveable/mousetrap v1.0.1
+# github.com/inconshreveable/mousetrap v1.1.0
 ## explicit; go 1.18
 github.com/inconshreveable/mousetrap
 # github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99
@@ -150,7 +150,7 @@ github.com/sirupsen/logrus
 # github.com/skeema/knownhosts v1.1.0
 ## explicit; go 1.17
 github.com/skeema/knownhosts
-# github.com/spf13/cobra v1.6.1
+# github.com/spf13/cobra v1.7.0
 ## explicit; go 1.15
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
