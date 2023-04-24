@@ -117,7 +117,7 @@ runs:
       shell: bash
       run: |
         extraArgs=()
-        if [ -z "${{ inputs.kernel }}" ]; then
+        if [ ! -z "${{ inputs.kernel }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel }}")
         fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
