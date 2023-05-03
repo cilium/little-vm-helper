@@ -123,7 +123,7 @@ runs:
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
-            ${extraArgs}[@]
+            ${extraArgs[@]}
 
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
