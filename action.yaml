@@ -55,6 +55,10 @@ inputs:
   kernel:
     description: 'Path to kernel image to boot with'
     required: false
+  fetch-image:
+    description: 'Fetch image'
+    required: false
+    default: true
 runs:
   using: "composite"
   steps:
@@ -99,14 +103,14 @@ runs:
       run: echo "image-name=${{ inputs.image }}_$(echo ${{ inputs.image-version }} | sed 's/\(.*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
 
     - name: Fetch VM image
-      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' && inputs.fetch-image == 'true' }}
       shell: bash
       run: |
         sudo mkdir /_images; sudo chmod 777 /_images
         docker run -v /_images:/mnt/images quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} cp /data/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst /mnt/images
 
     - name: Prepare VM image
-      if: ${{ inputs.provision == 'true'  }}
+      if: ${{ inputs.provision == 'true' && inputs.fetch-image == 'true' }}
       shell: bash
       run: |
         cd /_images
@@ -116,14 +120,19 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       shell: bash
       run: |
+        set -x
+        ls -la
         extraArgs=()
-        if [ ! -z "${{ inputs.kernel }}" ]; then
+        if [ -f "${{ inputs.kernel }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel }}")
         fi
+        echo ${extraArgs[@]}
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             ${extraArgs[@]}
+        sleep 60
+        set +x
 
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
