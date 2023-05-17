@@ -81,8 +81,16 @@ runs:
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
       run: |
-        sudo apt update
-        sudo apt install -y cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager
+        n=0
+        until [ "$n" -ge 5 ]; do
+          success=1
+          sudo apt update && \
+          sudo apt install -y cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager && \
+          break || success=0
+          n=$((n+1)) 
+          sleep 1
+        done
+        [ $success -eq 1 ] || exit 42
         sudo kvm-ok
 
     - uses: actions/cache@940f3d7cf195ba83374c77632d1e2cbb2f24ae68
