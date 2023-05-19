@@ -62,6 +62,7 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().StringVar(&rcnf.Mem, "mem", "4G", "RAM size (-m)")
 	cmd.Flags().StringVar(&rcnf.CPUKind, "cpu-kind", "kvm64", "CPU kind to use (-cpu), has no effect when KVM is disabled")
 	cmd.Flags().IntVar(&rcnf.QemuMonitorPort, "qemu-monitor-port", 0, "Port for QEMU monitor")
+	cmd.Flags().BoolVarP(&rcnf.Verbose, "verbose", "v", false, "Print qemu command before running it")
 
 	return cmd
 }
@@ -74,7 +75,7 @@ func StartQemu(rcnf RunConf) error {
 		return err
 	}
 
-	if rcnf.QemuPrint {
+	if rcnf.QemuPrint || rcnf.Verbose {
 		var sb strings.Builder
 		sb.WriteString(qemuBin)
 		for _, arg := range qemuArgs {
@@ -86,7 +87,10 @@ func StartQemu(rcnf RunConf) error {
 		}
 
 		fmt.Printf("%s\n", sb.String())
-		return nil
+		// We don't want to return early if running in verbose mode
+		if rcnf.QemuPrint {
+			return nil
+		}
 	}
 
 	qemuPath, err := exec.LookPath(qemuBin)

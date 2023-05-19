@@ -20,6 +20,9 @@ type RunConf struct {
 	// Daemonize QEMU after initializing
 	Daemonize bool
 
+	// Print qemu command before running it
+	Verbose bool
+
 	// Disable the network connection to the VM
 	DisableNetwork bool
 	ForwardedPorts runner.PortForwards
