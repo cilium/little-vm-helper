@@ -55,6 +55,10 @@ inputs:
   kernel:
     description: 'Path to kernel image to boot with'
     required: false
+  verbose:
+    description: 'Run in verbose mode'
+    required: true
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -127,6 +131,9 @@ runs:
         extraArgs=()
         if [ ! -z "${{ inputs.kernel }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel }}")
+        fi
+        if [ "${{ inputs.verbose == 'true' }}" ]; then
+          extraArgs+=("--verbose")
         fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
