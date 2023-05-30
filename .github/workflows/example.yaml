@@ -24,7 +24,7 @@ jobs:
         sudo apt-get -qy update
         # we need this to build debian images
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9
-        sudo apt-get -qy install mmdebstrap libguestfs-tools qemu-utils extlinux git fakeroot build-essential xz-utils libssl-dev bc flex libelf-dev bison
+        sudo apt-get -qy install mmdebstrap libguestfs-tools qemu-utils extlinux git fakeroot build-essential xz-utils libssl-dev bc flex libelf-dev bison pahole
 
     - name: Checkout code
       uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
