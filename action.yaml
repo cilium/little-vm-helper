@@ -73,6 +73,12 @@ runs:
         runner_os_id=$(grep VERSION_ID /etc/os-release | cut -d= -f 2 | sed 's/"//g')
         echo "runner_os_id=${runner_os_id}" >> $GITHUB_OUTPUT
 
+        dependencies="cpu-checker qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager"
+        echo "dependency_list=${dependencies}" >> $GITHUB_OUTPUT
+
+        dependencies_sha=$(echo ${dependencies} | md5sum)
+        echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
+
     - name: Install LVH cli
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
       shell: bash
@@ -89,7 +95,7 @@ runs:
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
-        key: ${{ runner.os }}-${{ steps.vars.find-lvh-cli.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ github.workflow_sha }}
+        key: ${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
 
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
@@ -100,7 +106,7 @@ runs:
           success=1
           sudo apt update && \
           sudo apt-get clean && \
-          sudo apt-get -d -y --no-install-recommends install cpu-checker qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager && \
+          sudo apt-get -d -y --no-install-recommends install ${{steps.find-lvh-cli.outputs.dependency_list}} && \
           break || success=0
           n=$((n+1)) 
           sleep 1
