@@ -154,7 +154,7 @@ runs:
         if [ ! -z "${{ inputs.kernel }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel }}")
         fi
-        if [ "${{ inputs.verbose == 'true' }}" ]; then
+        if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
         fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
