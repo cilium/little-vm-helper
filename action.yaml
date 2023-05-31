@@ -113,6 +113,8 @@ runs:
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
       run: |
+        # Disable auto update of man-db for every package
+        sudo rm /var/lib/man-db/auto-update
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
