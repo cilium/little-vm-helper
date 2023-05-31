@@ -70,6 +70,8 @@ runs:
         if [ -f "/bin/lvh" ]; then
           echo 'skip=true' >> $GITHUB_OUTPUT
         fi
+        runner_os_id=$(grep VERSION_ID /etc/os-release | cut -d= -f 2 | sed 's/"//g')
+        echo "runner_os_id=${runner_os_id}" >> $GITHUB_OUTPUT
 
     - name: Install LVH cli
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
@@ -81,23 +83,41 @@ runs:
         chmod +x /tmp/lvh
         sudo mv /tmp/lvh /bin/lvh
 
-    - name: Install dependencies
+    - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
+      id: package-cache
+      with:
+        path: /tmp/.ubuntu-pkgs
+        key: ${{ runner.os }}-${{ steps.vars.find-lvh-cli.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ github.workflow_sha }}
+
+    - name: Download LVH dependencies
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         n=0
         until [ "$n" -ge 5 ]; do
           success=1
           sudo apt update && \
-          sudo apt install -y cpu-checker qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager && \
+          sudo apt-get clean && \
+          sudo apt-get -d -y --no-install-recommends install cpu-checker qemu-system-x86 libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager && \
           break || success=0
           n=$((n+1)) 
           sleep 1
         done
         [ $success -eq 1 ] || exit 42
+        sudo mkdir -p /tmp/.ubuntu-pkgs
+        sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
+
+    - name: Install dependencies
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      run: |
+        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
+        sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
 
-    - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+    - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8 # v3.3.1
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
