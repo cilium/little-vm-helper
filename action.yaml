@@ -168,14 +168,27 @@ runs:
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             ${extraArgs[@]}
 
+    - name: Wait for VM's SSH Server
+      shell: bash
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]; do
+          success=1
+          ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost exit && \
+          break || success=0
+          n=$((n+1))
+          sleep 1
+        done
+        [ $success -eq 1 ] || exit 42
+
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
       shell: bash
       run: |
-         ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
-         set -e
-         echo "nameserver ${{ inputs.dns-resolver }}" > /etc/resolv.conf
-         EOF
+        ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
+        set -e
+        echo "nameserver ${{ inputs.dns-resolver }}" > /etc/resolv.conf
+        EOF
 
     - name: Run test cmd in VM
       shell: bash
