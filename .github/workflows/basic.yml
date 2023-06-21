@@ -18,7 +18,7 @@ jobs:
         go-version: '1.18.4'
 
     - name: Checkout code
-      uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
       with:
         path: src/little-vm-helper
 
