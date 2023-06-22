@@ -15,8 +15,9 @@ jobs:
         os: [ ubuntu-22.04 ]
     steps:
     - name: Install Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
       with:
+        # renovate: datasource=golang-version depName=go
         go-version: '1.18.4'
 
     - name: Install dependencies
@@ -27,7 +28,7 @@ jobs:
         sudo apt-get -qy install mmdebstrap libguestfs-tools qemu-utils extlinux git fakeroot build-essential xz-utils libssl-dev bc flex libelf-dev bison pahole
 
     - name: Checkout code
-      uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5
+      uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5 # v3.5.3
       with:
         path: src/little-vm-helper
 
