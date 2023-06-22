@@ -9,20 +9,26 @@ jobs:
   quay:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: WillAbides/setup-go-faster@v1.8.0
-        with:
-          go-version: 1.18
-      - uses: imjasonh/setup-ko@v0.6
-        env:
-          KO_DOCKER_REPO: quay.io/lvh-images/lvh
-      - env:
-          quay_token: ${{ secrets.QUAY_ROBOT_TOKEN }}
-        run: |
-          echo "${quay_token}" | ko login quay.io \
-            --username "lvh-images+gh" --password-stdin
+    - name: Install Go
+      uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
+      with:
+        # renovate: datasource=golang-version depName=go
+        go-version: 1.18.4
 
-          ko build --sbom=none --bare --platform=linux/amd64 \
-            --tags=latest,$(git describe --tag --always --dirty) ./cmd/lvh
+    - name: Checkout code
+      uses: actions/checkout@96f53100ba2a5449eb71d2e6604bbcd94b9449b5 # v3.5.3
+      with:
+        fetch-depth: 0
+
+    - uses: imjasonh/setup-ko@ace48d793556083a76f1e3e6068850c1f4a369aa # v0.6
+      env:
+        KO_DOCKER_REPO: quay.io/lvh-images/lvh
+
+    - env:
+        quay_token: ${{ secrets.QUAY_ROBOT_TOKEN }}
+      run: |
+        echo "${quay_token}" | ko login quay.io \
+          --username "lvh-images+gh" --password-stdin
+
+        ko build --sbom=none --bare --platform=linux/amd64 \
+          --tags=latest,$(git describe --tag --always --dirty) ./cmd/lvh
