@@ -24,8 +24,6 @@ jobs:
         path: src/little-vm-helper
 
     - name: Build and run Go tests
-      env:
-        GOPATH: /home/runner/work/tetragon/tetragon/go
       run: |
         cd src/little-vm-helper
         make
