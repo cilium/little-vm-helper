@@ -11,6 +11,10 @@ It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.
 Configurations for specific images used in the Cilium project can be found in:
 https://github.com/cilium/little-vm-helper-images.
 
+## Dependencies
+
+- qemu
+
 ## Usage
 
 For an example script, see [scripts/example.sh](scripts/example.sh).
@@ -144,6 +148,51 @@ go run ./cmd/lvh run --image _data/images/base.qcow2
 go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
 ```
 
+### Cilium development workflow
+
+Set up an LVH VM based on the kind image:
+
+```bash
+./scripts/pull_image.sh quay.io/lvh-images/kind:bpf-next-main
+lvh run --image $(ls -Art images/*.qcow2 | tail -n 1) --host-mount /path/to/cilium
+```
+
+Then, log into the VM as root and setup some dependencies:
+
+```bash
+# DNS
+echo "nameserver 1.1.1.1" > /etc/resolv.conf
+
+# Cilium-CLI
+CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+GOOS=$(go env GOOS)
+GOARCH=$(go env GOARCH)
+curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-${GOOS}-${GOARCH}.tar.gz{,.sha256sum}
+sha256sum --check cilium-${GOOS}-${GOARCH}.tar.gz.sha256sum
+sudo tar -C /usr/local/bin -xzvf cilium-${GOOS}-${GOARCH}.tar.gz
+rm cilium-${GOOS}-${GOARCH}.tar.gz{,.sha256sum}
+
+# Kind
+cd /host
+./contrib/scripts/kind.sh
+```
+
+Build the image **outside** the VM:
+
+```bash
+cd cilium
+make kind-image
+docker image save localhost:5000/cilium/cilium-dev:local -o cilium-dev
+```
+
+Finally, load up Cilium **inside** the VM with the target image:
+```bash
+cd /host
+kind load image-archive cilium-dev
+export CILIUM_CLI_MODE=helm
+make kind-install-cilium
+```
+
 ## FAQ
 
 ### Why not use packer to build images?
@@ -166,6 +215,10 @@ That being said, if we need packer functionality we can create a packer plugin
 These tools also target production VMs with lifetime streching beyond a single
 use. As a result, they introduce overhead in booting time, provisioning time,
 and storage.
+
+### How to quit a qemu session?
+
+Ctrl-a x
 
 ### TODO
 
