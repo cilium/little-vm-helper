@@ -39,6 +39,12 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 			fmt.Sprintf("telnet:localhost:%d,server,nowait", rcnf.SerialPort))
 	}
 
+	if rcnf.ConsoleLogFile != "" {
+		qemuArgs = append(qemuArgs,
+			"-serial",
+			fmt.Sprintf("file:%s", rcnf.ConsoleLogFile))
+	}
+
 	qemuArgs = append(qemuArgs,
 		"-hda", rcnf.testImageFname(),
 	)

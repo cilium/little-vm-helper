@@ -19,6 +19,8 @@ type RunConf struct {
 	DisableKVM bool
 	// Daemonize QEMU after initializing
 	Daemonize bool
+	// Log file for virtual console output
+	ConsoleLogFile string
 
 	// Print qemu command before running it
 	Verbose bool
