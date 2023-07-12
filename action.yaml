@@ -164,14 +164,29 @@ runs:
         if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
         fi
+        touch /tmp/console.log
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
+            --console-log-file /tmp/console.log \
             ${extraArgs[@]}
 
     - name: Wait for VM's SSH Server
       shell: bash
       run: |
+        n=0
+        until [ "$n" -ge 30 ]; do
+          started=1
+          if grep -E ".*OK.*Started.*ssh.*" /tmp/console.log; then
+            break || started=0
+          elif grep -E ".*FAILED.*Failed.*to.*start.*ssh*" /tmp/console.log; then
+            cat /tmp/console.log && exit 40
+          fi
+          n=$((n+1))
+          sleep 1
+        done
+        [ $started -eq 1 ] || (cat /tmp/console.log && exit 41)
+
         n=0
         until [ "$n" -ge 5 ]; do
           success=1
@@ -180,7 +195,7 @@ runs:
           n=$((n+1))
           sleep 1
         done
-        [ $success -eq 1 ] || exit 42
+        [ $success -eq 1 ] || (cat /tmp/console.log && exit 42)
 
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
