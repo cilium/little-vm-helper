@@ -16,7 +16,7 @@ inputs:
     description: 'LVH cli version (Docker tag)'
     required: true
     # renovate: datasource=github-tags depName=cilium/little-vm-helper
-    default: 'v0.0.8'
+    default: 'v0.0.10'
   cmd:
     description: 'Commands to run in a VM (any occurance of "$" within "cmd" must be escaped)'
     required: true
