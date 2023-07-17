@@ -18,7 +18,7 @@ inputs:
     # renovate: datasource=github-tags depName=cilium/little-vm-helper
     default: 'v0.0.8'
   cmd:
-    description: 'Commands to run in a VM'
+    description: 'Commands to run in a VM (any occurance of "$" within "cmd" must be escaped)'
     required: true
   ssh-port:
     description: 'SSH port for VM on a host'
