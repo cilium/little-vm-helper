@@ -164,7 +164,7 @@ runs:
         if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
         fi
-        touch /tmp/console.log
+        sudo touch /tmp/console.log
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
