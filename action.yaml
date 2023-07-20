@@ -172,6 +172,7 @@ runs:
             ${extraArgs[@]}
 
     - name: Wait for VM's SSH Server
+      if: ${{ inputs.provision == 'true' }}
       shell: bash
       run: |
         n=0
