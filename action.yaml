@@ -24,6 +24,22 @@ inputs:
     description: 'SSH port for VM on a host'
     required: true
     default: 2222
+  ssh-startup-wait-retries:
+    description: 'Number of retries to wait for SSH server startup'
+    required: true
+    default: 300
+  ssh-startup-wait-timeout:
+    description: 'Timeout in seconds between retries to wait for SSH server startup'
+    required: true
+    default: 1
+  ssh-connect-wait-retries:
+    description: 'Number of retries to connect to the SSH server'
+    required: true
+    default: 5
+  ssh-connect-wait-timeout:
+    description: 'Timeout in seconds between retries to connect to the SSH server'
+    required: true
+    default: 1
   host-mount:
     description: 'Host dir path to mount in /host dir of a VM'
     required: true
@@ -176,27 +192,37 @@ runs:
       shell: bash
       run: |
         n=0
-        until [ "$n" -ge 30 ]; do
-          started=1
+        started=1
+        until [ "$n" -ge ${{ inputs.ssh-startup-wait-retries }} ]; do
           if grep -E ".*OK.*Started.*ssh.*" /tmp/console.log; then
-            break || started=0
+            started=0
+            break
           elif grep -E ".*FAILED.*Failed.*to.*start.*ssh*" /tmp/console.log; then
-            cat /tmp/console.log && exit 40
+            cat /tmp/console.log
+            exit 40
           fi
           n=$((n+1))
-          sleep 1
+          sleep ${{ inputs.ssh-startup-wait-timeout }}
         done
-        [ $started -eq 1 ] || (cat /tmp/console.log && exit 41)
-
+        if [ $started -eq 1 ]; then
+          cat /tmp/console.log
+          exit 41
+        fi
+        
         n=0
-        until [ "$n" -ge 5 ]; do
-          success=1
-          ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost exit && \
-          break || success=0
+        success=1
+        until [ "$n" -ge ${{ inputs.ssh-connect-wait-retries }} ]; do
+          if ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost exit; then
+            success=0
+            break        
+          fi
           n=$((n+1))
-          sleep 1
+          sleep ${{ inputs.ssh-connect-wait-timeout }}
         done
-        [ $success -eq 1 ] || (cat /tmp/console.log && exit 42)
+        if [ $success -eq 1 ]; then
+          cat /tmp/console.log
+          exit 42
+        fi
 
     - name: Set DNS resolver
       if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
