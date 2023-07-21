@@ -3,7 +3,7 @@ module github.com/cilium/little-vm-helper
 go 1.18
 
 require (
-	github.com/go-git/go-git/v5 v5.7.0
+	github.com/go-git/go-git/v5 v5.8.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/packer-plugin-sdk v0.4.0
 	github.com/sirupsen/logrus v1.9.3
