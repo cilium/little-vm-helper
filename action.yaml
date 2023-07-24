@@ -192,10 +192,10 @@ runs:
       shell: bash
       run: |
         n=0
-        started=1
+        started=0
         until [ "$n" -ge ${{ inputs.ssh-startup-wait-retries }} ]; do
           if grep -E ".*OK.*Started.*ssh.*" /tmp/console.log; then
-            started=0
+            started=1
             break
           elif grep -E ".*FAILED.*Failed.*to.*start.*ssh*" /tmp/console.log; then
             cat /tmp/console.log
@@ -204,22 +204,22 @@ runs:
           n=$((n+1))
           sleep ${{ inputs.ssh-startup-wait-timeout }}
         done
-        if [ $started -eq 1 ]; then
+        if [ $started -eq 0 ]; then
           cat /tmp/console.log
           exit 41
         fi
         
         n=0
-        success=1
+        success=0
         until [ "$n" -ge ${{ inputs.ssh-connect-wait-retries }} ]; do
           if ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost exit; then
-            success=0
+            success=1
             break        
           fi
           n=$((n+1))
           sleep ${{ inputs.ssh-connect-wait-timeout }}
         done
-        if [ $success -eq 1 ]; then
+        if [ $success -eq 0 ]; then
           cat /tmp/console.log
           exit 42
         fi
