@@ -6,14 +6,14 @@ package images
 import (
 	"testing"
 
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/cilium/little-vm-helper/pkg/step"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestACtionMerge(t *testing.T) {
+func TestActionMerge(t *testing.T) {
 	cnf := StepConf{}
 
-	getSingleStep := func(op ActionOp) multistep.Step {
+	getSingleStep := func(op ActionOp) step.Step {
 		steps, err := op.ToSteps(&cnf)
 		assert.Nil(t, err)
 		assert.Len(t, steps, 1)
