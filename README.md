@@ -2,7 +2,7 @@
 
 little-vm-helper (lvh) is a VM management tool, aimed for testing and development of features that
 depend on the kernel, such as BPF. It is used in [cilium](https://github.com/cilium/cilium),
-[tetragon](https://github.com/cilium/teragon), and [pwru](https://github.com/cilium/pwru). It can also be used for kernel development. It is not
+[tetragon](https://github.com/cilium/tetragon), and [pwru](https://github.com/cilium/pwru). It can also be used for kernel development. It is not
 meant, and should not be used for running production VMs. Fast booting and image building, as well
 as being storage efficient are the main goals.
 
