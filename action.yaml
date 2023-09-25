@@ -153,7 +153,7 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       id: derive-image-name
       shell: bash
-      run: echo "image-name=${{ inputs.image }}_$(echo ${{ inputs.image-version }} | sed 's/\(.*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
+      run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/\(.*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
 
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
