@@ -47,9 +47,6 @@ inputs:
     description: 'Provision VM (if set to false, only given test cmd is going to be run)'
     required: true
     default: 'true'
-  dns-resolver:
-    description: 'Set DNS resolver in /etc/resolv.conf of a VM'
-    required: false
   install-dependencies:
     description: 'Install QEMU dependencies (Debian/Ubuntu)'
     default: 'false'
@@ -223,15 +220,6 @@ runs:
           cat /tmp/console.log
           exit 42
         fi
-
-    - name: Set DNS resolver
-      if: ${{ inputs.provision == 'true' && inputs.dns-resolver != '' }}
-      shell: bash
-      run: |
-        ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
-        set -e
-        echo "nameserver ${{ inputs.dns-resolver }}" > /etc/resolv.conf
-        EOF
 
     - name: Run test cmd in VM
       shell: bash
