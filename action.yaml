@@ -73,6 +73,9 @@ inputs:
     description: 'Run in verbose mode'
     required: true
     default: 'false'
+  port-forward:
+    description: 'Additional to SSH port forward ($LOCAL:$VM_PORT)'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -122,7 +125,7 @@ runs:
           sudo apt-get clean && \
           sudo apt-get -d -y --no-install-recommends install ${{steps.find-lvh-cli.outputs.dependency_list}} && \
           break || success=0
-          n=$((n+1)) 
+          n=$((n+1))
           sleep 1
         done
         [ $success -eq 1 ] || exit 42
@@ -177,6 +180,9 @@ runs:
         if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
         fi
+        if [ "${{ inputs.port-forward }}" != "" ]; then
+          extraArgs+=("-p" "${{ inputs.port-forward }}")
+        fi
         sudo touch /tmp/console.log
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
@@ -205,13 +211,13 @@ runs:
           cat /tmp/console.log
           exit 41
         fi
-        
+
         n=0
         success=0
         until [ "$n" -ge ${{ inputs.ssh-connect-wait-retries }} ]; do
           if ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost exit; then
             success=1
-            break        
+            break
           fi
           n=$((n+1))
           sleep ${{ inputs.ssh-connect-wait-timeout }}
