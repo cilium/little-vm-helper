@@ -14,11 +14,15 @@ jobs:
       matrix:
         os: [ ubuntu-22.04 ]
     steps:
+    - name: Checkout code
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        path: src/little-vm-helper
+
     - name: Install Go
       uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
       with:
-        # renovate: datasource=golang-version depName=go
-        go-version: 1.21.5
+        go-version-file: "src/little-vm-helper/go.mod"
 
     - name: Install dependencies
       run: |
@@ -26,11 +30,6 @@ jobs:
         # we need this to build debian images
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 648ACFD622F3D138 0E98404D386FA1D9
         sudo apt-get -qy install mmdebstrap libguestfs-tools qemu-utils extlinux git fakeroot build-essential xz-utils libssl-dev bc flex libelf-dev bison pahole
-
-    - name: Checkout code
-      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      with:
-        path: src/little-vm-helper
 
     - name: Make kernel accessible
       run: |
