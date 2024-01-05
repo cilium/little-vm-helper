@@ -13,6 +13,6 @@ func ImagesCommand() *cobra.Command {
 		Short: "Build VM images",
 	}
 
-	ret.AddCommand(BuildCmd(), ExampleCmd())
+	ret.AddCommand(BuildCmd(), ExampleCmd(), PullCmd())
 	return ret
 }
