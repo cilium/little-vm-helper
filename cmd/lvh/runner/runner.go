@@ -4,11 +4,15 @@
 package runner
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
 
+	"github.com/cilium/little-vm-helper/pkg/images"
 	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -16,7 +20,9 @@ import (
 )
 
 var (
-	rcnf RunConf
+	rcnf      RunConf
+	dirName   string
+	pullImage bool
 
 	ports []string
 )
@@ -38,6 +44,29 @@ func RunCommand() *cobra.Command {
 
 			t0 := time.Now()
 
+			if _, err := os.Stat(rcnf.Image); errors.Is(err, os.ErrNotExist) && pullImage {
+				pcnf := images.PullConf{
+					Image:     rcnf.Image,
+					TargetDir: dirName,
+				}
+				// Not a local file reference, could this be an OCI image?
+				if err := images.PullImage(context.Background(), pcnf); err != nil {
+					fmt.Fprintf(os.Stderr, "unable to find local file %q\n", rcnf.Image)
+					return fmt.Errorf("unable to pull image: %w", err)
+				}
+
+				result, err := images.ExtractImage(context.Background(), pcnf)
+				switch {
+				case err == nil:
+				case errors.Is(err, os.ErrExist):
+				default:
+					fmt.Fprintf(os.Stderr, "unable to find local file %q\n", rcnf.Image)
+					return fmt.Errorf("unable to extract image: %w", err)
+				}
+				fmt.Printf("Autodetected image %s inside %s\n", result.Images[0], pcnf.Image)
+				rcnf.Image = result.Images[0]
+			}
+
 			err = StartQemu(rcnf)
 			dur := time.Since(t0).Round(time.Millisecond)
 			fmt.Printf("Execution took %v\n", dur)
@@ -51,6 +80,8 @@ func RunCommand() *cobra.Command {
 
 	cmd.Flags().StringVar(&rcnf.Image, "image", "", "VM image file path")
 	cmd.MarkFlagRequired("image")
+	cmd.Flags().StringVar(&dirName, "dir", "_data", "directory to keep the images (configuration will be saved in <dir>/images.json and images in <dir>/images)")
+	cmd.Flags().BoolVar(&pullImage, "pull-image", true, "Pull image from an OCI repository if it is not found locally")
 	cmd.Flags().StringVar(&rcnf.KernelFname, "kernel", "", "kernel filename to boot with. (if empty no -kernel option will be passed to qemu)")
 	cmd.Flags().BoolVar(&rcnf.QemuPrint, "qemu-cmd-print", false, "Do not run the qemu command, just print it")
 	cmd.Flags().BoolVar(&rcnf.DisableKVM, "qemu-disable-kvm", false, "Do not use KVM acceleration, even if /dev/kvm exists")

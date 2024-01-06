@@ -5,6 +5,7 @@ package images
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -29,11 +30,18 @@ func PullCmd() *cobra.Command {
 				return fmt.Errorf("failed to create directory %s: %w", dirName, err)
 			}
 
-			_, err := images.PullImage(context.Background(), images.PullConf{
+			pcnf := images.PullConf{
 				Image:     args[0],
 				TargetDir: dirName,
 				Cache:     cache,
-			})
+			}
+			if err := images.PullImage(context.Background(), pcnf); err != nil {
+				return err
+			}
+			_, err := images.ExtractImage(context.Background(), pcnf)
+			if err != nil && errors.Is(err, os.ErrExist) {
+				err = nil
+			}
 			return err
 		},
 	}

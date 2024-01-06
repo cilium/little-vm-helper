@@ -139,6 +139,11 @@ Or, to with the kernel installed in the image:
 go run ./cmd/lvh run --image _data/images/base.qcow2
 ```
 
+OCI images are also supported:
+```bash
+go run ./cmd/lvh run --image quay.io/lvh-images/root-images:main
+```
+
 **Note**: Building images and kernels is only supported on Linux. On the other hand, images and kernels already build on Linux can be booted in MacOS (both x86 and Arm). The only requirement is ```qemu-system-x86_64```. As MacOS does not support KVM, the commands to boot images are:
 ```bash
 go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
