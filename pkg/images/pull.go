@@ -25,14 +25,36 @@ type PullConf struct {
 	Cache     bool
 }
 
-type PullResult struct {
+type ExtractResult struct {
 	Images []string
 }
 
 // PullImage pulls an OCI image from a remote repository and decompresses it
 // into a local directory.
-func PullImage(ctx context.Context, conf PullConf) (*PullResult, error) {
-	result := &PullResult{
+func PullImage(ctx context.Context, conf PullConf) error {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return fmt.Errorf("cannot establish client for image %s: %w", conf.Image, err)
+	}
+	defer cli.Close()
+
+	remotePullReader, err := cli.ImagePull(ctx, conf.Image, types.ImagePullOptions{})
+	if err != nil {
+		return fmt.Errorf("cannot pull image %s: %w", conf.Image, err)
+	}
+	defer remotePullReader.Close()
+
+	// Complete the image pull
+	// TODO: Take the output and overwrite each line in stdout for pretty
+	//       status output instead of spamming the terminal with json
+	if _, err = io.Copy(os.Stdout, remotePullReader); err != nil {
+		return fmt.Errorf("image pull unexpectedly terminated: %w", err)
+	}
+	return nil
+}
+
+func ExtractImage(ctx context.Context, conf PullConf) (*ExtractResult, error) {
+	result := &ExtractResult{
 		Images: make([]string, 0, 1),
 	}
 
@@ -41,17 +63,6 @@ func PullImage(ctx context.Context, conf PullConf) (*PullResult, error) {
 		return nil, fmt.Errorf("cannot establish client for image %s: %w", conf.Image, err)
 	}
 	defer cli.Close()
-
-	remotePullReader, err := cli.ImagePull(ctx, conf.Image, types.ImagePullOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("cannot pull image %s: %w", conf.Image, err)
-	}
-	defer remotePullReader.Close()
-
-	// Complete the image pull
-	// TODO: Take the output and overwrite each line in stdout for pretty
-	//       status output instead of spamming the terminal with json
-	io.Copy(os.Stdout, remotePullReader)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: conf.Image,
@@ -87,11 +98,11 @@ func PullImage(ctx context.Context, conf PullConf) (*PullResult, error) {
 		}
 
 		image, err := handleTarObject(ctx, tarReader, hdr, conf, resp.ID)
-		if err != nil {
-			return nil, err
-		}
 		if image != "" {
 			result.Images = append(result.Images, image)
+		}
+		if err != nil {
+			return result, err
 		}
 	}
 
@@ -111,6 +122,10 @@ func handleTarObject(ctx context.Context, tr *tar.Reader, hdr *tar.Header, conf 
 		compressed := strings.HasSuffix(dstPath, ".zst")
 		if compressed {
 			image = strings.TrimSuffix(dstPath, ".zst")
+			if _, err := os.Stat(image); err == nil {
+				return image, os.ErrExist
+			}
+
 			cmd := exec.CommandContext(ctx, "zstd", "-d", "-", "-o", image)
 			cmd.Stdin = tr
 
