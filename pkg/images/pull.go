@@ -17,6 +17,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/moby/term"
 )
 
 type PullConf struct {
@@ -44,10 +46,9 @@ func PullImage(ctx context.Context, conf PullConf) error {
 	}
 	defer remotePullReader.Close()
 
-	// Complete the image pull
-	// TODO: Take the output and overwrite each line in stdout for pretty
-	//       status output instead of spamming the terminal with json
-	if _, err = io.Copy(os.Stdout, remotePullReader); err != nil {
+	// Complete the image pull, and pretty print while we're at it.
+	fd, isTerm := term.GetFdInfo(os.Stderr)
+	if err = jsonmessage.DisplayJSONMessagesStream(remotePullReader, os.Stderr, fd, isTerm, nil); err != nil {
 		return fmt.Errorf("image pull unexpectedly terminated: %w", err)
 	}
 	return nil
