@@ -12,6 +12,7 @@
     "action.yaml",
     "go.mod",
     "go.sum",
+    "Dockerfile",
   ],
   postUpdateOptions: [
     "gomodTidy"
