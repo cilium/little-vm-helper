@@ -1,4 +1,4 @@
-FROM golang:1.20 as gobuilder
+FROM golang:1.21.5 as gobuilder
 WORKDIR /src/little-vm-helper
 COPY . .
 RUN make little-vm-helper
