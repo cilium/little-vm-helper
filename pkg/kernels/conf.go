@@ -23,6 +23,8 @@ type KernelConf struct {
 	URL string `json:"url"`
 	// config options
 	Opts []ConfigOption `json:"opts,omitempty"`
+	// Extra make args
+	ExtraMakeArgs []string `json:"extra_make_args,omitempty"`
 }
 
 type Conf struct {
