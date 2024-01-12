@@ -46,12 +46,12 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	}
 
 	qemuArgs = append(qemuArgs,
-		"-hda", rcnf.testImageFname(),
+		"-drive", fmt.Sprintf("file=%s,if=virtio,index=0,media=disk", rcnf.testImageFname()),
 	)
 
 	if rcnf.KernelFname != "" {
 		appendArgs := []string{
-			"root=/dev/sda",
+			"root=/dev/vda",
 			"console=ttyS0",
 			"earlyprintk=ttyS0",
 			"panic=-1",
