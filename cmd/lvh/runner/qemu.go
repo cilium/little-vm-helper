@@ -45,13 +45,21 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 			fmt.Sprintf("file:%s", rcnf.ConsoleLogFile))
 	}
 
-	qemuArgs = append(qemuArgs,
-		"-hda", rcnf.testImageFname(),
-	)
+	var kernelRoot string
+	switch rcnf.RootDev {
+	case "hda":
+		qemuArgs = append(qemuArgs, "-hda", rcnf.testImageFname())
+		kernelRoot = "/dev/sda"
+	case "vda":
+		qemuArgs = append(qemuArgs, "-drive", fmt.Sprintf("file=%s,if=virtio,index=0,media=disk", rcnf.testImageFname()))
+		kernelRoot = "/dev/vda"
+	default:
+		return nil, fmt.Errorf("invalid root device: %s", rcnf.RootDev)
+	}
 
 	if rcnf.KernelFname != "" {
 		appendArgs := []string{
-			"root=/dev/sda",
+			fmt.Sprintf("root=%s", kernelRoot),
 			"console=ttyS0",
 			"earlyprintk=ttyS0",
 			"panic=-1",
