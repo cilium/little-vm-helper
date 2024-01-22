@@ -40,6 +40,9 @@ type RunConf struct {
 	// Kind of CPU to use (e.g. host or kvm64)
 	CPUKind string
 
+	// RootDev is the type of device used for the root fs. Can be "hda" or "vda"
+	RootDev string
+
 	QemuMonitorPort int
 }
 
