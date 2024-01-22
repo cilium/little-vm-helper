@@ -215,7 +215,6 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 	}
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	ncpus = "1"
 	if err := runAndLogMake(ctx, log, kc, "-C", srcDir, "-j", ncpus, "bzImage", "modules"); err != nil {
 		return fmt.Errorf("buiding bzImage && modules failed: %w", err)
 	}
