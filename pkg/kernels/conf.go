@@ -196,8 +196,10 @@ func (cnf *Conf) getOptions(kc *KernelConf) []ConfigOption {
 	}
 
 	// then kernel-specific options
-	for _, opts := range kc.Opts {
-		ret = append(ret, opts)
+	if kc != nil {
+		for _, opts := range kc.Opts {
+			ret = append(ret, opts)
+		}
 	}
 
 	return ret
