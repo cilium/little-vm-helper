@@ -53,6 +53,11 @@ func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, k
 	return kd.configureKernel(ctx, log, kc)
 }
 
+func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kernDir, kernName string) error {
+	kc := kd.KernelConfig(kernName)
+	return kd.rawConfigureKernel(ctx, log, kc, kernDir)
+}
+
 func kcfonfigValidate(opts []ConfigOption) error {
 
 	var ret error
@@ -141,9 +146,11 @@ func runAndLogMake(
 	return logcmd.RunAndLogCommandContext(ctx, log, MakeBinary, makeArgs...)
 }
 
-func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
-	srcDir := filepath.Join(kd.Dir, kc.Name)
-
+func (kd *KernelsDir) rawConfigureKernel(
+	ctx context.Context, log *logrus.Logger,
+	kc *KernelConf, srcDir string,
+	makePrepareArgs ...string,
+) error {
 	oldPath, err := os.Getwd()
 	if err != nil {
 		return err
@@ -156,8 +163,10 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 
 	configOptions := kd.Conf.getOptions(kc)
 
-	if err := runAndLogMake(ctx, log, kc, "defconfig", "prepare"); err != nil {
-		return err
+	if len(makePrepareArgs) > 0 {
+		if err := runAndLogMake(ctx, log, kc, makePrepareArgs...); err != nil {
+			return err
+		}
 	}
 
 	configCmd := filepath.Join(".", "scripts", "config")
@@ -194,6 +203,12 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 
 	log.Info("configuration completed")
 	return nil
+}
+
+func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
+	srcDir := filepath.Join(kd.Dir, kc.Name)
+	return kd.rawConfigureKernel(ctx, log, kc, srcDir, "defconfig", "prepare")
+
 }
 
 func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {

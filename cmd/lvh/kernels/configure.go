@@ -31,3 +31,28 @@ func configureCommand() *cobra.Command {
 		},
 	}
 }
+
+func rawConfigureCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:   "raw_configure <kernel_dir> [<kernel_name>]",
+		Short: "configure a kernel prepared by means other than lvh",
+		Args:  cobra.RangeArgs(1, 2),
+		Run: func(cmd *cobra.Command, args []string) {
+			log := logrus.New()
+			kd, err := kernels.LoadDir(dirName)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			kdir := args[0]
+			kname := ""
+			if len(args) > 1 {
+				kname = args[1]
+			}
+			if err := kd.RawConfigure(context.Background(), log, kdir, kname); err != nil {
+				log.Fatal(err)
+			}
+
+		},
+	}
+}
