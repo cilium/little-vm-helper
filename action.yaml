@@ -76,6 +76,9 @@ inputs:
   port-forward:
     description: 'Additional to SSH port forward ($LOCAL:$VM_PORT)'
     required: false
+  root-dev:
+    description: 'Root device (hda or vda)'
+    default: 'hda'
 runs:
   using: "composite"
   steps:
@@ -179,6 +182,7 @@ runs:
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
+            --root-dev={{ inputs.root-dev }} \
             --console-log-file /tmp/console.log \
             ${extraArgs[@]}
 
