@@ -162,7 +162,15 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} -d "/"
+        sudo mkdir /_images; sudo chmod 777 /_images
+        docker run -v /_images:/mnt/images quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} cp /data/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst /mnt/images
+
+    - name: Prepare VM image
+      if: ${{ inputs.provision == 'true'  }}
+      shell: bash
+      run: |
+        cd /_images
+        zstd -d ${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst -o ${{ inputs.test-name }}.qcow2
 
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
