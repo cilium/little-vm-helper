@@ -149,7 +149,7 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
-        path: /_images/${{ inputs.image }}_${{ inputs.image-version }}.qcow2.zst
+        path: /images/${{ inputs.image }}_${{ inputs.image-version }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}
 
     - name: Derive VM image file name
@@ -162,6 +162,7 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
+        sudo mkdir /images; sudo chmod 777 /images
         /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "/"
 
     - name: Start VM
@@ -179,7 +180,7 @@ runs:
           extraArgs+=("-p" "${{ inputs.port-forward }}")
         fi
         sudo touch /tmp/console.log
-        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /_images/${{ inputs.test-name }}.qcow2 \
+        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /images/${{ inputs.test-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             --root-dev={{ inputs.root-dev }} \
