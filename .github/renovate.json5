@@ -79,6 +79,25 @@
         "docker.io/library/golang"
       ],
     },
+    {
+      // Avoid updating patch releases of golang in go.mod
+      "enabled": "false",
+      "matchFiles": [
+        "go.mod",
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "matchDatasources": [
+        "golang-version"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      matchBaseBranches: [
+        "main"
+      ]
+    },
   ],
   "regexManagers": [
     {
