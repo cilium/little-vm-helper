@@ -15,8 +15,7 @@ inputs:
   lvh-version:
     description: 'LVH cli version (Docker tag)'
     required: true
-    # renovate: datasource=github-tags depName=cilium/little-vm-helper
-    default: 'v0.0.14'
+    default: 'v0.0.16'
   cmd:
     description: 'Commands to run in a VM (any occurance of "$" within "cmd" must be escaped)'
     required: true
@@ -95,7 +94,6 @@ runs:
 
         dependencies_sha=$(echo ${dependencies} | md5sum)
         echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
-
     - name: Install LVH cli
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
       shell: bash
@@ -105,7 +103,6 @@ runs:
         docker rm $cid
         chmod +x /tmp/lvh
         sudo mv /tmp/lvh /bin/lvh
-
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
@@ -113,7 +110,6 @@ runs:
       with:
         path: /tmp/.ubuntu-pkgs
         key: ${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
-
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
       shell: bash
@@ -131,7 +127,6 @@ runs:
         [ $success -eq 1 ] || exit 42
         sudo mkdir -p /tmp/.ubuntu-pkgs
         sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
-
     - name: Install dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
@@ -141,27 +136,23 @@ runs:
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
-
     - uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
         path: /images/${{ inputs.image }}_${{ inputs.image-version }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}
-
     - name: Derive VM image file name
       if: ${{ inputs.provision == 'true' }}
       id: derive-image-name
       shell: bash
       run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/\(.*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
-
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         sudo mkdir /images; sudo chmod 777 /images
         /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "/"
-
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -182,7 +173,6 @@ runs:
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
             ${extraArgs[@]}
-
     - name: Wait for VM's SSH Server
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -219,12 +209,11 @@ runs:
           cat /tmp/console.log
           exit 42
         fi
-
     - name: Run test cmd in VM
       shell: bash
       run: |
-         ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
-         set -eu
+        ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
+        set -eu
 
-         ${{ inputs.cmd }}
-         EOF
+        ${{ inputs.cmd }}
+        EOF
