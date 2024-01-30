@@ -9,7 +9,6 @@
   "gitAuthor": "renovate[bot] <bot@renovateapp.com>",
   "includePaths": [
     ".github/workflows/**",
-    "action.yaml",
     "go.mod",
     "go.sum",
     "Dockerfile",
@@ -91,17 +90,6 @@
       //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
       "matchStrings": [
         "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+version: (?<currentValue>.*)"
-      ]
-    },
-    {
-      "fileMatch": [
-        "^action\\.yaml$",
-      ],
-      // This regex manages version strings in GitHub actions files,
-      // similar to the examples shown here:
-      //   https://docs.renovatebot.com/modules/manager/regex/#advanced-capture
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+.+default: '(?<currentValue>.*)'"
       ]
     },
   ]
