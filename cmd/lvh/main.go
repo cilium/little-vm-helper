@@ -4,11 +4,13 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/cilium/little-vm-helper/cmd/lvh/images"
 	"github.com/cilium/little-vm-helper/cmd/lvh/kernels"
 	"github.com/cilium/little-vm-helper/cmd/lvh/runner"
+	"github.com/cilium/little-vm-helper/pkg/version"
 
 	"github.com/spf13/cobra"
 )
@@ -26,6 +28,13 @@ func init() {
 		images.ImagesCommand(),
 		kernels.KernelsCommand(),
 		runner.RunCommand(),
+		&cobra.Command{
+			Use:   "version",
+			Short: "version",
+			Run: func(cmd *cobra.Command, args []string) {
+				fmt.Println(version.Version)
+			},
+		},
 	)
 }
 

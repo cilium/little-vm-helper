@@ -2,6 +2,12 @@ GO ?= go
 
 OCIREPO ?= quay.io/lvh-images/lvh
 DOCKER ?= docker
+VERSION ?= $(shell git describe --tags --always --long)
+
+GO_BUILD_LDFLAGS =
+GO_BUILD_LDFLAGS += -X 'github.com/cilium/little-vm-helper/pkg/version.Version=$(VERSION)'
+GO_BUILD_FLAGS += -ldflags "$(GO_BUILD_LDFLAGS)"
+
 
 all: tests little-vm-helper
 
@@ -10,7 +16,7 @@ tests:
 	$(GO) test -cover ./...
 
 little-vm-helper: FORCE
-	CGO_ENABLED=0 $(GO) build ./cmd/lvh
+	CGO_ENABLED=0 $(GO) build $(GO_BUILD_FLAGS) ./cmd/lvh
 
 .PHONY: image
 image:
