@@ -161,6 +161,7 @@ runs:
       run: |
         sudo mkdir /images; sudo chmod 777 /images
         /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "/"
+        mv /images/*.qcow2 /images/${{ inputs.test-name }}.qcow2
 
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
