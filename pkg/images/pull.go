@@ -124,25 +124,22 @@ func handleTarObject(ctx context.Context, tr *tar.Reader, hdr *tar.Header, conf 
 		compressed := strings.HasSuffix(dstPath, ".zst")
 
 		// Copy the target file out to the host (compressed or not).
-		// On failure, clean up the temporary file; otherwise move it
-		// to the target destination.
-		tmpFile, err := os.CreateTemp("", filepath.Base(hdr.Name))
+		dstFile, err := os.Create(dstPath)
 		if err != nil {
-			return image, fmt.Errorf("failed to open temporary file for %s: %w", hdr.Name, err)
+			return image, fmt.Errorf("failed to open %s: %w", dstPath, err)
 		}
 		defer func() {
-			tmpPath := tmpFile.Name()
-			tmpFile.Close()
+			path := dstFile.Name()
+			dstFile.Close()
 			if err != nil || (!conf.Cache && compressed) {
-				os.Remove(tmpPath)
+				// Only keep the compressed copy on the hostfs
+				// if asked for it, and if there are no errors.
+				os.Remove(path)
 				return
-			}
-			if err = os.Rename(tmpFile.Name(), dstPath); err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to move %s to %s: %s", tmpPath, dstPath, err)
 			}
 		}()
 
-		n, err := io.CopyN(tmpFile, tr, hdr.Size)
+		n, err := io.CopyN(dstFile, tr, hdr.Size)
 		if err != nil {
 			return image, fmt.Errorf("failed to copy %s from container %s: %w", dstPath, containerID, err)
 		}
@@ -151,10 +148,10 @@ func handleTarObject(ctx context.Context, tr *tar.Reader, hdr *tar.Header, conf 
 		}
 
 		if compressed {
-			if _, err = tmpFile.Seek(0, 0); err != nil {
+			if _, err = dstFile.Seek(0, 0); err != nil {
 				return image, fmt.Errorf("cannot seek to the start of the compressed target file %s: %w", dstPath, err)
 			}
-			compressedTarget := bufio.NewReader(tmpFile)
+			compressedTarget := bufio.NewReader(dstFile)
 			dstImagePath := strings.TrimSuffix(dstPath, ".zst")
 
 			return dstImagePath, extractZst(ctx, compressedTarget, dstImagePath)
