@@ -153,6 +153,7 @@ runs:
       run: |
         sudo mkdir /images; sudo chmod 777 /images
         /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "/"
+        find /images
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -168,7 +169,7 @@ runs:
           extraArgs+=("-p" "${{ inputs.port-forward }}")
         fi
         sudo touch /tmp/console.log
-        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /images/${{ inputs.test-name }}.qcow2 \
+        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
