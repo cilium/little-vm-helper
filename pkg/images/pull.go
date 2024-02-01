@@ -165,11 +165,20 @@ func handleTarObject(ctx context.Context, tr *tar.Reader, hdr *tar.Header, conf 
 }
 
 func extractZst(ctx context.Context, reader io.Reader, dstPath string) error {
-	if _, err := os.Stat(dstPath); err == nil {
-		return os.ErrExist
+	dstDir, dstName := filepath.Split(dstPath)
+
+	var tmpPath string
+	if tmpf, err := os.CreateTemp(dstDir, fmt.Sprintf("%s-*", dstName)); err != nil {
+		return err
+	} else {
+		tmpPath = tmpf.Name()
+		tmpf.Close()
+		// NB: remove temp file in case something goes wrong
+		defer os.Remove(tmpPath)
 	}
 
-	cmd := exec.CommandContext(ctx, "zstd", "-d", "-", "-o", dstPath)
+	// NB: we need to force with -f, because the destination file exists (we created it)
+	cmd := exec.CommandContext(ctx, "zstd", "-d", "-", "-o", tmpPath, "-f")
 	cmd.Stdin = reader
 
 	if _, err := cmd.Output(); err != nil {
@@ -180,5 +189,5 @@ func extractZst(ctx context.Context, reader io.Reader, dstPath string) error {
 		return fmt.Errorf("failed during zst decompression to %s: %w", dstPath, err)
 	}
 
-	return nil
+	return os.Rename(tmpPath, dstPath)
 }
