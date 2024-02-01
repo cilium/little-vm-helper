@@ -1,4 +1,4 @@
-FROM golang:1.21.6@sha256:76aadd914a29a2ee7a6b0f3389bb2fdb87727291d688e1d972abe6c0fa6f2ee0 as gobuilder
+FROM golang:1.21.6@sha256:4d1942cb703999c3acd03b8efe5cc588cb5e39bace931d876de170e16d44e2cd as gobuilder
 WORKDIR /src/little-vm-helper
 COPY . .
 RUN make little-vm-helper
