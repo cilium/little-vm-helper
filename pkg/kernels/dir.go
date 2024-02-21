@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"runtime"
 
+	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/sirupsen/logrus"
 )
@@ -230,7 +231,12 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 	}
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
-	if err := runAndLogMake(ctx, log, kc, "-C", srcDir, "-j", ncpus, "bzImage", "modules"); err != nil {
+
+	target, err := arch.Target()
+	if err != nil {
+		return fmt.Errorf("failed to get make target: %w", err)
+	}
+	if err := runAndLogMake(ctx, log, kc, "-C", srcDir, "-j", ncpus, target, "modules"); err != nil {
 		return fmt.Errorf("buiding bzImage && modules failed: %w", err)
 	}
 
