@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/cilium/little-vm-helper/pkg/images"
 	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
@@ -100,9 +101,12 @@ func RunCommand() *cobra.Command {
 	return cmd
 }
 
-const qemuBin = "qemu-system-x86_64"
-
 func StartQemu(rcnf RunConf) error {
+	qemuBin, err := arch.QemuBinary()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve Qemu binary: %w", err)
+	}
+
 	qemuArgs, err := BuildQemuArgs(rcnf.Logger, &rcnf)
 	if err != nil {
 		return err
