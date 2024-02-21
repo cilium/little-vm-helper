@@ -4,7 +4,7 @@ module github.com/cilium/little-vm-helper
 go 1.21.0
 
 require (
-	github.com/docker/docker v25.0.2+incompatible
+	github.com/docker/docker v25.0.3+incompatible
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/moby/term v0.5.0
 	github.com/sirupsen/logrus v1.9.3
