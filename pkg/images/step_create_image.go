@@ -5,6 +5,7 @@ package images
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -74,6 +75,9 @@ append initrd=initrd.img root=%s rw console=ttyS0
 
 // makeRootImage creates a root (with respect to the image forest hierarch) image
 func (s *CreateImage) makeRootImage(ctx context.Context) error {
+	if s == nil || s.imgCnf == nil {
+		return errors.New("step configuration or image configuration is nil")
+	}
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
 	// build package list: add a kernel if building a bootable image
