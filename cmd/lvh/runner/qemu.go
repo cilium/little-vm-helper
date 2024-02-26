@@ -24,6 +24,8 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 		"-smp", fmt.Sprintf("%d", rcnf.CPU), "-m", rcnf.Mem,
 	}
 
+	qemuArgs = arch.AppendArchSpecificQemuArgs(qemuArgs)
+
 	// quick-and-dirty kvm detection
 	if !rcnf.DisableKVM {
 		if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {

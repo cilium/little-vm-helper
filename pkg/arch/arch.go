@@ -42,3 +42,15 @@ func Console() (string, error) {
 		return "", ErrUnsupportedArch
 	}
 }
+
+// AppendArchSpecificQemuArgs appends Qemu arguments to the input that are
+// specific to the architecture lvh is running on. For example on ARM64, Qemu
+// needs some precision on the -machine option to start.
+func AppendArchSpecificQemuArgs(qemuArgs []string) []string {
+	switch runtime.GOARCH {
+	case "arm64":
+		return append(qemuArgs, "-machine", "virt", "-cpu", "max")
+	default:
+		return qemuArgs
+	}
+}
