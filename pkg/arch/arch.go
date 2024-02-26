@@ -30,3 +30,15 @@ func QemuBinary() (string, error) {
 		return "", ErrUnsupportedArch
 	}
 }
+
+// Console returns the name of the device for the first serial port.
+func Console() (string, error) {
+	switch runtime.GOARCH {
+	case "amd64":
+		return "ttyS0", nil
+	case "arm64":
+		return "ttyAMA0", nil
+	default:
+		return "", ErrUnsupportedArch
+	}
+}

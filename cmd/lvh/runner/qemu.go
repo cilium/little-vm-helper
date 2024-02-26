@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/sirupsen/logrus"
 )
 
@@ -58,9 +59,14 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	}
 
 	if rcnf.KernelFname != "" {
+		console, err := arch.Console()
+		if err != nil {
+			return nil, fmt.Errorf("failed retrieving console name: %w", err)
+		}
+
 		appendArgs := []string{
 			fmt.Sprintf("root=%s", kernelRoot),
-			"console=ttyS0",
+			fmt.Sprintf("console=%s", console),
 			"earlyprintk=ttyS0",
 			"panic=-1",
 		}
