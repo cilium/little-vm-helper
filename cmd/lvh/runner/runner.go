@@ -93,7 +93,7 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().IntVar(&rcnf.SerialPort, "serial-port", 0, "Port for serial console")
 	cmd.Flags().IntVar(&rcnf.CPU, "cpu", 2, "CPU count (-smp)")
 	cmd.Flags().StringVar(&rcnf.Mem, "mem", "4G", "RAM size (-m)")
-	cmd.Flags().StringVar(&rcnf.CPUKind, "cpu-kind", "kvm64", "CPU kind to use (-cpu), has no effect when KVM is disabled")
+	cmd.Flags().StringVar(&rcnf.CPUKind, "cpu-kind", "", "CPU kind to use (-cpu), has no effect when KVM is disabled (default 'kvm64' on amd64 and 'max' on arm64)")
 	cmd.Flags().IntVar(&rcnf.QemuMonitorPort, "qemu-monitor-port", 0, "Port for QEMU monitor")
 	cmd.Flags().StringVar(&rcnf.RootDev, "root-dev", "vda", "type of root device (hda or vda)")
 	cmd.Flags().BoolVarP(&rcnf.Verbose, "verbose", "v", false, "Print qemu command before running it")

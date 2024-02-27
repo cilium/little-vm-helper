@@ -27,14 +27,18 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	qemuArgs = arch.AppendArchSpecificQemuArgs(qemuArgs)
 
 	// quick-and-dirty kvm detection
+	kvmEnabled := false
 	if !rcnf.DisableKVM {
 		if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {
-			qemuArgs = append(qemuArgs, "-enable-kvm", "-cpu", rcnf.CPUKind)
+			qemuArgs = append(qemuArgs, "-enable-kvm")
 			f.Close()
+			kvmEnabled = true
 		} else {
 			log.Info("KVM disabled")
 		}
 	}
+
+	qemuArgs = arch.AppendCPUKind(qemuArgs, kvmEnabled, rcnf.CPUKind)
 
 	if rcnf.SerialPort != 0 {
 		qemuArgs = append(qemuArgs,
