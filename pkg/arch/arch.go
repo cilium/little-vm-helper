@@ -49,8 +49,26 @@ func Console() (string, error) {
 func AppendArchSpecificQemuArgs(qemuArgs []string) []string {
 	switch runtime.GOARCH {
 	case "arm64":
-		return append(qemuArgs, "-machine", "virt", "-cpu", "max")
+		return append(qemuArgs, "-machine", "virt")
 	default:
 		return qemuArgs
 	}
+}
+
+// AppendCPUKind appends the -cpu type if needed, historically amd64 has used no
+// specific kind when running without KVM, and using kvm64 when running with
+// KVM. However, arm64 needs -cpu max in both cases to start properly.
+func AppendCPUKind(qemuArgs []string, kvmEnabled bool, cpuKind string) []string {
+	if cpuKind != "" {
+		return append(qemuArgs, "-cpu", cpuKind)
+	}
+	switch runtime.GOARCH {
+	case "amd64":
+		if kvmEnabled {
+			return append(qemuArgs, "-cpu", "kvm64")
+		}
+	case "arm64":
+		return append(qemuArgs, "-cpu", "max")
+	}
+	return qemuArgs
 }
