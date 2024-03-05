@@ -72,3 +72,14 @@ func AppendCPUKind(qemuArgs []string, kvmEnabled bool, cpuKind string) []string 
 	}
 	return qemuArgs
 }
+
+// Bootable returns the arch-dependent default value in case the pointer is nil,
+// so option is unconfigured. Typically arm64 should not be bootable by default
+// because we didn't take the time to find a bootloader that was arm64
+// compatible so far.
+func Bootable(bootable *bool) bool {
+	if bootable == nil {
+		return runtime.GOARCH == "amd64"
+	}
+	return *bootable
+}

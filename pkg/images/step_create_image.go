@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/cilium/little-vm-helper/pkg/logcmd"
 	"github.com/cilium/little-vm-helper/pkg/step"
 	"github.com/sirupsen/logrus"
@@ -74,8 +75,7 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	}
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
-	// if bootable is unset, bootable defaults to true, otherwise value tells
-	bootable := s.imgCnf.Bootable == nil || *s.imgCnf.Bootable
+	bootable := arch.Bootable(s.imgCnf.Bootable)
 	// build package list: add a kernel if building a bootable image
 	packages := make([]string, 0, len(s.imgCnf.Packages)+1)
 	if bootable {
