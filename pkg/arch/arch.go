@@ -9,8 +9,11 @@ var ErrUnsupportedArch = fmt.Errorf("unsupported architecture: %s", runtime.GOAR
 
 // Target returns the Linux Makefile target to build the kernel, for historical
 // reasons, those are different between architectures.
-func Target() (string, error) {
-	switch runtime.GOARCH {
+func Target(arch string) (string, error) {
+	if arch == "" {
+		arch = runtime.GOARCH
+	}
+	switch arch {
 	case "amd64":
 		return "bzImage", nil
 	case "arm64":
@@ -18,6 +21,22 @@ func Target() (string, error) {
 	default:
 		return "", ErrUnsupportedArch
 	}
+}
+
+func CrossCompiling(targetArch string) bool {
+	return targetArch != "" && targetArch != runtime.GOARCH
+}
+
+func CrossCompileMakeArgs(targetArch string) ([]string, error) {
+	if !CrossCompiling(targetArch) {
+		return nil, nil
+	}
+
+	switch targetArch {
+	case "arm64":
+		return []string{"ARCH=arm64", "CROSS_COMPILE=aarch64-linux-gnu-"}, nil
+	}
+	return nil, ErrUnsupportedArch
 }
 
 func QemuBinary() (string, error) {

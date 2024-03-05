@@ -12,7 +12,9 @@ import (
 )
 
 func configureCommand() *cobra.Command {
-	return &cobra.Command{
+	var arch string
+
+	cmd := &cobra.Command{
 		Use:   "configure <kernel>",
 		Short: "configure kernel",
 		Args:  cobra.ExactArgs(1),
@@ -24,12 +26,16 @@ func configureCommand() *cobra.Command {
 			}
 
 			kname := args[0]
-			if err := kd.ConfigureKernel(context.Background(), log, kname); err != nil {
+			if err := kd.ConfigureKernel(context.Background(), log, kname, arch); err != nil {
 				log.Fatal(err)
 			}
 
 		},
 	}
+
+	cmd.Flags().StringVar(&arch, "arch", "", "target architecture to configure the kernel, e.g. 'amd64' or 'arm64' (default to native architecture)")
+
+	return cmd
 }
 
 func rawConfigureCommand() *cobra.Command {
