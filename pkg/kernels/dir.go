@@ -46,12 +46,12 @@ func (kd *KernelsDir) RemoveKernelConfig(name string) *KernelConf {
 	return nil
 }
 
-func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, kernName string) error {
+func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, kernName string, targetArch string) error {
 	kc := kd.KernelConfig(kernName)
 	if kc == nil {
 		return fmt.Errorf("kernel '%s' not found", kernName)
 	}
-	return kd.configureKernel(ctx, log, kc)
+	return kd.configureKernel(ctx, log, kc, targetArch)
 }
 
 func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kernDir, kernName string) error {
@@ -206,13 +206,21 @@ func (kd *KernelsDir) rawConfigureKernel(
 	return nil
 }
 
-func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
+func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf, targetArch string) error {
 	srcDir := filepath.Join(kd.Dir, kc.Name)
-	return kd.rawConfigureKernel(ctx, log, kc, srcDir, "defconfig", "prepare")
+	crossCompilationArgs, err := arch.CrossCompileMakeArgs(targetArch)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve cross compilation args: %w", err)
+	}
+
+	configureMakeArgs := []string{"defconfig", "prepare"}
+	configureMakeArgs = append(configureMakeArgs, crossCompilationArgs...)
+
+	return kd.rawConfigureKernel(ctx, log, kc, srcDir, configureMakeArgs...)
 
 }
 
-func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf) error {
+func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *KernelConf, targetArch string) error {
 	if err := CheckEnvironment(); err != nil {
 		return err
 	}
@@ -224,7 +232,7 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 		return err
 	} else if !exists {
 		log.Info("Configuring kernel")
-		err = kd.configureKernel(ctx, log, kc)
+		err = kd.configureKernel(ctx, log, kc, targetArch)
 		if err != nil {
 			return fmt.Errorf("failed to configure kernel: %w", err)
 		}
@@ -232,15 +240,27 @@ func (kd *KernelsDir) buildKernel(ctx context.Context, log *logrus.Logger, kc *K
 
 	ncpus := fmt.Sprintf("%d", runtime.NumCPU())
 
-	target, err := arch.Target()
+	target, err := arch.Target(targetArch)
 	if err != nil {
 		return fmt.Errorf("failed to get make target: %w", err)
 	}
-	if err := runAndLogMake(ctx, log, kc, "-C", srcDir, "-j", ncpus, target, "modules"); err != nil {
+
+	buildMakeArgs := []string{"-C", srcDir, "-j", ncpus, target, "modules"}
+
+	crossCompilationArgs, err := arch.CrossCompileMakeArgs(targetArch)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve cross compilation args: %w", err)
+	}
+	buildMakeArgs = append(buildMakeArgs, crossCompilationArgs...)
+
+	if err := runAndLogMake(ctx, log, kc, buildMakeArgs...); err != nil {
 		return fmt.Errorf("buiding bzImage && modules failed: %w", err)
 	}
 
-	if err := runAndLogMake(ctx, log, kc, "-C", srcDir, "tar-pkg"); err != nil {
+	archiveMakeArgs := []string{"-C", srcDir, "tar-pkg"}
+	archiveMakeArgs = append(archiveMakeArgs, crossCompilationArgs...)
+
+	if err := runAndLogMake(ctx, log, kc, archiveMakeArgs...); err != nil {
 		return fmt.Errorf("build dir failed: %w", err)
 	}
 
