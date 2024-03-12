@@ -6,7 +6,7 @@ depend on the kernel, such as BPF. It is used in [cilium](https://github.com/cil
 meant, and should not be used for running production VMs. Fast booting and image building, as well
 as being storage efficient are the main goals.
 
-It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/).
+It uses [qemu](https://www.qemu.org/) and [libguestfs tools](https://libguestfs.org/). See [dependencies](#what-are-the-dependencies-of-lvh).
 
 Configurations for specific images used in the Cilium project can be found in:
 https://github.com/cilium/little-vm-helper-images.
@@ -171,6 +171,18 @@ That being said, if we need packer functionality we can create a packer plugin
 These tools also target production VMs with lifetime streching beyond a single
 use. As a result, they introduce overhead in booting time, provisioning time,
 and storage.
+
+### What are the dependencies of LVH?
+
+On debian distribution, here is a list of packages needed for LVH to work.
+
+| Action                         | Debian packages                                                                                                        |
+| --------                       | -------                                                                                                                |
+| Building images                | `qemu-kvm mmdebstrap debian-archive-keyring libguestfs-tools`                                                          |
+| Building the Linux kernel      | `libncurses-dev gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm` |
+| Cross-compile arm64 on x86\_64 | `gcc-aarch64-linux-gnu`                                                                                                |
+| Cross-compile x86\_64 on arm64 | `gcc-x86-64-linux-gnu`                                                                                                 |
+
 
 ### TODO
 
