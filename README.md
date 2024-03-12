@@ -88,6 +88,9 @@ $ go run ./cmd/lvh kernels --dir _data add bpf-next git://git.kernel.org/pub/scm
 $ go run ./cmd/lvh kernels --dir _data build bpf-next
 ```
 
+Please note, to cross-build for a different architecture, you can use the
+`--arch=arm64` or `--arch=amd64` flag.
+
 The configuration file keeps the url for a kernel, together with its configuration options:
 ```jsonc
 $ jq . < _data/kernel.json
@@ -123,7 +126,8 @@ bpf-next/
 git/
 ```
 
-Currently, kernels are built using the `bzImage` and `dir-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
+Currently, kernels are built using the `bzImage` for x86\_64 or `Image.gz` for
+arm64, and `tar-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
 
 ### Booting images
 
