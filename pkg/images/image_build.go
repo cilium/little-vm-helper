@@ -48,6 +48,7 @@ func (f *ImageForest) doBuildImage(
 	log *logrus.Logger,
 	image string,
 	merge bool,
+	arch string,
 ) error {
 	cnf, ok := f.confs[image]
 	if !ok {
@@ -58,6 +59,7 @@ func (f *ImageForest) doBuildImage(
 		imagesDir: f.imagesDir,
 		imgCnf:    cnf,
 		log:       log,
+		arch:      arch,
 	}
 
 	steps := make([]step.Step, 2, 2+len(cnf.Actions))

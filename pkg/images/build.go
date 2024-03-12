@@ -22,6 +22,8 @@ type BuildConf struct {
 	ForceRebuild bool
 	// if MergeSteps is set, image build steps will be merged when possible (better performance at the cost making operations more complicated)
 	MergeSteps bool
+	// Arch is the target architecture for which the image is to be built
+	Arch string
 }
 
 // BuildImageResult describes the result of building a single image
@@ -145,7 +147,7 @@ func (b *buildState) doBuildImage(image string) BuildImageResult {
 	}
 
 	buildImage := func(image string) error {
-		return b.f.doBuildImage(context.Background(), b.bldConf.Log, image, b.bldConf.MergeSteps)
+		return b.f.doBuildImage(context.Background(), b.bldConf.Log, image, b.bldConf.MergeSteps, b.bldConf.Arch)
 	}
 	if b.bldConf.DryRun {
 		buildImage = b.f.doBuildImageDryRun

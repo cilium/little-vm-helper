@@ -10,4 +10,5 @@ type StepConf struct {
 	imagesDir string
 	imgCnf    *ImgConf
 	log       *logrus.Logger
+	arch      string
 }

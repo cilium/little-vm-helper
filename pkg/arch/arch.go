@@ -96,9 +96,12 @@ func AppendCPUKind(qemuArgs []string, kvmEnabled bool, cpuKind string) []string 
 // so option is unconfigured. Typically arm64 should not be bootable by default
 // because we didn't take the time to find a bootloader that was arm64
 // compatible so far.
-func Bootable(bootable *bool) bool {
+func Bootable(bootable *bool, arch string) bool {
+	if arch == "" {
+		arch = runtime.GOARCH
+	}
 	if bootable == nil {
-		return runtime.GOARCH == "amd64"
+		return arch == "amd64"
 	}
 	return *bootable
 }

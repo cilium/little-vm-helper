@@ -16,7 +16,7 @@ import (
 )
 
 func BuildCmd() *cobra.Command {
-	var dirName, imageName string
+	var dirName, imageName, arch string
 	var forceRebuild, dryRun, mergeSteps bool
 
 	cmd := &cobra.Command{
@@ -53,6 +53,7 @@ func BuildCmd() *cobra.Command {
 				DryRun:       dryRun,
 				ForceRebuild: forceRebuild,
 				MergeSteps:   mergeSteps,
+				Arch:         arch,
 			}
 			start := time.Now()
 			if imageName == "" {
@@ -89,5 +90,6 @@ func BuildCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
 	cmd.Flags().BoolVar(&mergeSteps, "merge-steps", true, "Merge steps when possible to improve performance. Disabling this might be useufl to investigate action issues.")
+	cmd.Flags().StringVar(&arch, "arch", "", "target architecture to build the image, e.g. 'amd64' or 'arm64' (default to native architecture)")
 	return cmd
 }

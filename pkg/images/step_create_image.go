@@ -75,7 +75,7 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	}
 	imgFname := filepath.Join(s.imagesDir, s.imgCnf.Name)
 	tarFname := path.Join(s.imagesDir, fmt.Sprintf("%s.tar", s.imgCnf.Name))
-	bootable := arch.Bootable(s.imgCnf.Bootable)
+	bootable := arch.Bootable(s.imgCnf.Bootable, s.arch)
 	// build package list: add a kernel if building a bootable image
 	packages := make([]string, 0, len(s.imgCnf.Packages)+1)
 	if bootable {
@@ -83,11 +83,12 @@ func (s *CreateImage) makeRootImage(ctx context.Context) error {
 	}
 	packages = append(packages, s.imgCnf.Packages...)
 
-	cmd := exec.CommandContext(ctx, Mmdebstrap,
-		"sid",
-		"--include", strings.Join(packages, ","),
-		tarFname,
-	)
+	mmdebstrapArgs := []string{"sid", "--include", strings.Join(packages, ","), tarFname}
+	if arch.CrossCompiling(s.arch) {
+		mmdebstrapArgs = append(mmdebstrapArgs, "--arch", s.arch)
+	}
+
+	cmd := exec.CommandContext(ctx, Mmdebstrap, mmdebstrapArgs...)
 	err := logcmd.RunAndLogCommand(cmd, s.log)
 	if err != nil {
 		return err
