@@ -59,7 +59,7 @@ func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kern
 	return kd.rawConfigureKernel(ctx, log, kc, kernDir)
 }
 
-func kcfonfigValidate(opts []ConfigOption) error {
+func kConfigValidate(opts []ConfigOption) error {
 
 	var ret error
 	// we want to check that:
@@ -178,7 +178,7 @@ func (kd *KernelsDir) rawConfigureKernel(
 		}
 
 		if false {
-			if err := kcfonfigValidate(configOptions[:i+1]); err != nil {
+			if err := kConfigValidate(configOptions[:i+1]); err != nil {
 				return fmt.Errorf("failed to validate config after applying %v: %w", opts, err)
 			}
 		}
@@ -186,7 +186,7 @@ func (kd *KernelsDir) rawConfigureKernel(
 	}
 
 	if false {
-		if err := kcfonfigValidate(configOptions); err != nil {
+		if err := kConfigValidate(configOptions); err != nil {
 			return fmt.Errorf("failed to validate config after scripts: %w", err)
 		}
 	}
@@ -198,7 +198,7 @@ func (kd *KernelsDir) rawConfigureKernel(
 
 	// NB: some configuration options are only available in certain
 	// kernels. We have no way of dealing with this currently.
-	if err := kcfonfigValidate(configOptions); err != nil {
+	if err := kConfigValidate(configOptions); err != nil {
 		log.Warnf("discrepancies in generated config: %s", err)
 	}
 
