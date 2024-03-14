@@ -54,9 +54,9 @@ func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, k
 	return kd.configureKernel(ctx, log, kc, targetArch)
 }
 
-func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kernDir, kernName string) error {
+func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kernDir, kernName string, targetArch string) error {
 	kc := kd.KernelConfig(kernName)
-	return kd.rawConfigureKernel(ctx, log, kc, kernDir)
+	return kd.rawConfigureKernel(ctx, log, kc, targetArch, kernDir)
 }
 
 func kConfigValidate(opts []ConfigOption) error {
@@ -165,7 +165,7 @@ func runAndLogMake(
 
 func (kd *KernelsDir) rawConfigureKernel(
 	ctx context.Context, log *logrus.Logger,
-	kc *KernelConf, srcDir string,
+	kc *KernelConf, srcDir string, targetArch string,
 	makePrepareArgs ...string,
 ) error {
 	oldPath, err := os.Getwd()
@@ -207,8 +207,16 @@ func (kd *KernelsDir) rawConfigureKernel(
 		}
 	}
 
+	crossCompilationArgs, err := arch.CrossCompileMakeArgs(targetArch)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve cross compilation args: %w", err)
+	}
+
+	olddefconfigMakeArgs := []string{"olddefconfig"}
+	olddefconfigMakeArgs = append(olddefconfigMakeArgs, crossCompilationArgs...)
+
 	// run make olddefconfig to clean up the config file, and ensure that everything is in order
-	if err := runAndLogMake(ctx, log, kc, "olddefconfig"); err != nil {
+	if err := runAndLogMake(ctx, log, kc, olddefconfigMakeArgs...); err != nil {
 		return err
 	}
 
@@ -232,7 +240,7 @@ func (kd *KernelsDir) configureKernel(ctx context.Context, log *logrus.Logger, k
 	configureMakeArgs := []string{"defconfig", "prepare"}
 	configureMakeArgs = append(configureMakeArgs, crossCompilationArgs...)
 
-	return kd.rawConfigureKernel(ctx, log, kc, srcDir, configureMakeArgs...)
+	return kd.rawConfigureKernel(ctx, log, kc, srcDir, targetArch, configureMakeArgs...)
 
 }
 
