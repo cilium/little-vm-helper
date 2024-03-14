@@ -11,9 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func configureCommand() *cobra.Command {
-	var arch string
+const (
+	archFlag = "arch"
+	archHelp = "target architecture to configure the kernel, e.g. 'amd64' or 'arm64' (default to native architecture)"
+)
 
+func configureCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configure <kernel>",
 		Short: "configure kernel",
@@ -26,20 +29,20 @@ func configureCommand() *cobra.Command {
 			}
 
 			kname := args[0]
-			if err := kd.ConfigureKernel(context.Background(), log, kname, arch); err != nil {
+			if err := kd.ConfigureKernel(context.Background(), log, kname, cmd.Flag(archFlag).Value.String()); err != nil {
 				log.Fatal(err)
 			}
 
 		},
 	}
 
-	cmd.Flags().StringVar(&arch, "arch", "", "target architecture to configure the kernel, e.g. 'amd64' or 'arm64' (default to native architecture)")
+	cmd.Flags().String(archFlag, "", archHelp)
 
 	return cmd
 }
 
 func rawConfigureCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "raw_configure <kernel_dir> [<kernel_name>]",
 		Short: "configure a kernel prepared by means other than lvh",
 		Args:  cobra.RangeArgs(1, 2),
@@ -55,10 +58,14 @@ func rawConfigureCommand() *cobra.Command {
 			if len(args) > 1 {
 				kname = args[1]
 			}
-			if err := kd.RawConfigure(context.Background(), log, kdir, kname); err != nil {
+			if err := kd.RawConfigure(context.Background(), log, kdir, kname, cmd.Flag(archFlag).Value.String()); err != nil {
 				log.Fatal(err)
 			}
 
 		},
 	}
+
+	cmd.Flags().String(archFlag, "", archHelp)
+
+	return cmd
 }
