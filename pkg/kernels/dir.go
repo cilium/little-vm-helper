@@ -65,9 +65,18 @@ func kConfigValidate(opts []ConfigOption) error {
 	// we want to check that:
 	//  - what is supposed to be enabled, is enabled
 	//  - what is supposed to be disabled, is not enabled
+	//  - what is supposed to be configured as module, is configured as a module
+
+	type configState string
+
+	const (
+		enabledState  configState = "y"
+		disabledState configState = "n"
+		moduleState   configState = "m"
+	)
 
 	type OptMapVal struct {
-		enabled bool
+		state   configState
 		checked bool
 	}
 
@@ -75,9 +84,11 @@ func kConfigValidate(opts []ConfigOption) error {
 	for _, opt := range opts {
 		switch opt[0] {
 		case "--enable":
-			optMap[opt[1]] = OptMapVal{enabled: true}
+			optMap[opt[1]] = OptMapVal{state: enabledState}
 		case "--disable":
-			optMap[opt[1]] = OptMapVal{enabled: false}
+			optMap[opt[1]] = OptMapVal{state: disabledState}
+		case "--module":
+			optMap[opt[1]] = OptMapVal{state: moduleState}
 		default:
 			return fmt.Errorf("Unknown option: %s", opt[0])
 		}
@@ -90,18 +101,20 @@ func kConfigValidate(opts []ConfigOption) error {
 	}
 	defer kcfg.Close()
 
-	enabledRe := regexp.MustCompile(`([a-zA-Z0-9_]+)=y`)
+	enabledOrModuleRe := regexp.MustCompile(`([a-zA-Z0-9_]+)=(y|m)`)
 	disabledRe := regexp.MustCompile(`# ([a-zA-Z0-9_]+) is not set`)
 	s := bufio.NewScanner(kcfg)
 	for s.Scan() {
 		txt := s.Text()
 		var opt string
-		optEnabled := false
-		if match := enabledRe.FindStringSubmatch(txt); len(match) > 0 {
+		var optState configState
+		if match := enabledOrModuleRe.FindStringSubmatch(txt); len(match) > 2 {
 			opt = match[1]
-			optEnabled = true
+			// the regex can only match 'y' or 'm' so this should be correct
+			optState = configState(match[2])
 		} else if match := disabledRe.FindStringSubmatch(txt); len(match) > 0 {
 			opt = match[1]
+			optState = disabledState
 		} else {
 			continue
 		}
@@ -114,10 +127,10 @@ func kConfigValidate(opts []ConfigOption) error {
 		mapVal.checked = true
 		optMap[opt] = mapVal
 
-		if mapVal.enabled != optEnabled {
+		if mapVal.state != optState {
 			ret = errors.Join(ret,
-				fmt.Errorf("value %s misconfigured: expected: %t but seems to be %t based on '%s'",
-					opt, mapVal.enabled, optEnabled, txt))
+				fmt.Errorf("value %s misconfigured: expected: %q but seems to be %q based on %q",
+					opt, mapVal.state, optState, txt))
 		}
 
 	}
@@ -127,8 +140,11 @@ func kConfigValidate(opts []ConfigOption) error {
 	}
 
 	for i, v := range optMap {
-		if v.enabled && !v.checked {
+		if v.state == enabledState && !v.checked {
 			ret = errors.Join(ret, fmt.Errorf("value %s enabled but not found", i))
+		}
+		if v.state == moduleState && !v.checked {
+			ret = errors.Join(ret, fmt.Errorf("value %s configured as module but not found", i))
 		}
 	}
 
