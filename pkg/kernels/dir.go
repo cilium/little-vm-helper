@@ -112,7 +112,7 @@ func kConfigValidate(opts []ConfigOption) error {
 			opt = match[1]
 			// the regex can only match 'y' or 'm' so this should be correct
 			optState = configState(match[2])
-		} else if match := disabledRe.FindStringSubmatch(txt); len(match) > 0 {
+		} else if match := disabledRe.FindStringSubmatch(txt); len(match) > 1 {
 			opt = match[1]
 			optState = disabledState
 		} else {
