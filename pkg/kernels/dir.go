@@ -56,7 +56,7 @@ func (kd *KernelsDir) ConfigureKernel(ctx context.Context, log *logrus.Logger, k
 
 func (kd *KernelsDir) RawConfigure(ctx context.Context, log *logrus.Logger, kernDir, kernName string, targetArch string) error {
 	kc := kd.KernelConfig(kernName)
-	return kd.rawConfigureKernel(ctx, log, kc, targetArch, kernDir)
+	return kd.rawConfigureKernel(ctx, log, kc, kernDir, targetArch)
 }
 
 func kConfigValidate(opts []ConfigOption) error {
