@@ -29,5 +29,5 @@ jobs:
         echo "${quay_token}" | ko login quay.io \
           --username "lvh-images+gh" --password-stdin
 
-        ko build --sbom=none --bare --platform=linux/amd64 \
+        ko build --sbom=none --bare --platform=linux/amd64,linux/arm64 \
           --tags=latest,$(git describe --tag --always --dirty) ./cmd/lvh
