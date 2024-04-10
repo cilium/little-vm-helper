@@ -9,14 +9,16 @@ import (
 
 var dirName string
 
+const (
+	dirNameHelp    = "directory to place kernels"
+	dirNameCommand = "dir"
+)
+
 func KernelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kernels",
 		Short: "build kernels",
 	}
-
-	cmd.PersistentFlags().StringVar(&dirName, "dir", "", "directory to to place kernels")
-	cmd.MarkPersistentFlagRequired("dir")
 
 	cmd.AddCommand(
 		initCommand(),

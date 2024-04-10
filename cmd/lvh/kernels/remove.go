@@ -27,5 +27,7 @@ func removeCommand() *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&backupConf, "backup-conf", false, "backup configuration")
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
 	return cmd
 }

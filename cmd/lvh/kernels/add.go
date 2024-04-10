@@ -70,5 +70,7 @@ func addCommand() *cobra.Command {
 	addCmd.Flags().BoolVar(&addPrintConfig, "just-print-config", false, "do not actually add the kernel. Just print its config.")
 	addCmd.Flags().BoolVar(&addFetch, "fetch", false, "fetch URL")
 	addCmd.Flags().BoolVar(&backupConf, "backup-conf", false, "backup configuration")
+	addCmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	addCmd.MarkFlagRequired(dirNameCommand)
 	return addCmd
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func fetchCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "fetch <kernel>",
 		Short: "fetch kernel",
 		Args:  cobra.ExactArgs(1),
@@ -22,4 +22,9 @@ func fetchCommand() *cobra.Command {
 			return kernels.FetchKernel(context.Background(), log, dirName, kname)
 		},
 	}
+
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
+
+	return cmd
 }

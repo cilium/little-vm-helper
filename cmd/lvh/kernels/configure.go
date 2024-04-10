@@ -37,6 +37,8 @@ func configureCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(archFlag, "", archHelp)
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired("dir")
 
 	return cmd
 }
@@ -66,6 +68,8 @@ func rawConfigureCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(archFlag, "", archHelp)
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
 
 	return cmd
 }
