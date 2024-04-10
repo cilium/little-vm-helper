@@ -16,8 +16,9 @@ const (
 
 func KernelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "kernels",
-		Short: "build kernels",
+		Use:     "kernels",
+		Aliases: []string{"kernel", "k"},
+		Short:   "build kernels",
 	}
 
 	cmd.AddCommand(
