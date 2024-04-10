@@ -26,6 +26,8 @@ func buildCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&arch, "arch", "", "target architecture to build the kernel, e.g. 'amd64' or 'arm64' (default to native architecture)")
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
 
 	return cmd
 }

@@ -45,5 +45,7 @@ func initCommand() *cobra.Command {
 			strings.Join(kernels.GetConfigGroupNames(), ","),
 		),
 	)
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
 	return cmd
 }

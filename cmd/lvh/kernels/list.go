@@ -12,7 +12,7 @@ import (
 )
 
 func listCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "list available kernels (by reading config file in directory)",
 		Run: func(cmd *cobra.Command, _ []string) {
@@ -27,4 +27,9 @@ func listCommand() *cobra.Command {
 			}
 		},
 	}
+
+	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
+	cmd.MarkFlagRequired(dirNameCommand)
+
+	return cmd
 }
