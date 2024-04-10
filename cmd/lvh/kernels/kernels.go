@@ -18,7 +18,7 @@ func KernelsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "kernels",
 		Aliases: []string{"kernel", "k"},
-		Short:   "build kernels",
+		Short:   "build and pull kernels",
 	}
 
 	cmd.AddCommand(
@@ -30,6 +30,7 @@ func KernelsCommand() *cobra.Command {
 		rawConfigureCommand(),
 		buildCommand(),
 		fetchCommand(),
+		catalogCommand(),
 	)
 
 	return cmd
