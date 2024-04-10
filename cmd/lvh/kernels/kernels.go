@@ -31,6 +31,7 @@ func KernelsCommand() *cobra.Command {
 		buildCommand(),
 		fetchCommand(),
 		catalogCommand(),
+		pullCommand(),
 	)
 
 	return cmd

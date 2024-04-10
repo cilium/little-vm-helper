@@ -11,7 +11,14 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-const kernelImageRepository = "quay.io/lvh-images/kernel-images"
+const (
+	kernelImageRepository = "quay.io/lvh-images/kernel-images"
+
+	kernelTagRegex = `^(.+)-([0-9]+\.[0-9]+|main)$`
+
+	ciCommand = "ci"
+	ciHelp    = "use CI repositories instead of main ones"
+)
 
 func catalogCommand() *cobra.Command {
 	var ci bool
@@ -31,7 +38,7 @@ Examples:
   # Retrieve the latest tags available for version bpf-next
   lvh kernels catalog bpf-next | tail -n 2`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			re := regexp.MustCompile(`(.+)-([0-9]+\.[0-9]+|main)`)
+			re := regexp.MustCompile(kernelTagRegex)
 
 			repo := kernelImageRepository
 			if ci {
@@ -90,7 +97,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().BoolVar(&ci, "ci", false, "use CI repositories instead of main ones")
+	cmd.Flags().BoolVar(&ci, ciCommand, false, ciHelp)
 
 	return cmd
 }
