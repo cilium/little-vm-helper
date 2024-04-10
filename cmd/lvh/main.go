@@ -36,6 +36,7 @@ func init() {
 			},
 		},
 	)
+	rootCmd.SetOut(os.Stdout)
 }
 
 func main() {
