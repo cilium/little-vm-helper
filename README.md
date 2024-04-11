@@ -18,9 +18,10 @@ For an example script, see [scripts/example.sh](scripts/example.sh).
 LVH can be used to:
  * build root images for VMs
  * build kernels
+ * download kernels
  * boot VMs using above
 
-### Root images
+### Build root images
 
 Build example images:
 ```bash
@@ -79,7 +80,7 @@ $ ls -sh1 _data/images/*.img
 1.7G _data/images/k8s.img
 ```
 
-### Kernels
+### Build kernels
 
 ```bash
 $ mkdir -p _data/kernels
@@ -128,6 +129,53 @@ git/
 
 Currently, kernels are built using the `bzImage` for x86\_64 or `Image.gz` for
 arm64, and `tar-pkg` targets (see [pkg/kernels/conf.go](pkg/kernels/conf.go)).
+
+### Download kernels
+
+List the available versions
+
+```console
+$ lvh kernels catalog
+bpf-next
+rhel8
+4.9
+4.19
+[...]
+6.3
+6.6
+```
+
+Retrieve the tags for a given version:
+```console
+$ lvh kernels catalog 6.6
+6.6-20240123.120815
+6.6-20240123.175813
+[...]
+6.6-20240404.144247
+6.6-20240408.100959
+6.6-main
+```
+
+See `lvh kernels catalog --help` for more details.
+
+Download the kernel and related artifacts (BTF, modules, etc.)
+
+```console
+$ lvh kernels pull 6.6-main
+$ find 6.6-main/ -maxdepth 3
+6.6-main/
+6.6-main/boot
+6.6-main/boot/vmlinuz-6.6.25
+6.6-main/boot/btf-6.6.25
+6.6-main/boot/System.map-6.6.25
+6.6-main/boot/vmlinux-6.6.25
+6.6-main/boot/config-6.6.25
+6.6-main/lib
+6.6-main/lib/modules
+6.6-main/lib/modules/6.6.25
+```
+
+See `lvh kernels pull --help` for more details.
 
 ### Booting images
 
