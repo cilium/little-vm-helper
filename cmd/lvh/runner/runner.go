@@ -8,20 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"time"
 
-	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/cilium/little-vm-helper/pkg/images"
 	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"golang.org/x/sys/unix"
 )
 
 var (
-	rcnf      RunConf
+	rcnf      runner.RunConf
 	dirName   string
 	pullImage bool
 
@@ -68,7 +64,7 @@ func RunCommand() *cobra.Command {
 				rcnf.Image = result.Images[0]
 			}
 
-			err = StartQemu(rcnf)
+			err = runner.StartQemu(rcnf)
 			dur := time.Since(t0).Round(time.Millisecond)
 			fmt.Printf("Execution took %v\n", dur)
 			if err != nil {
@@ -99,41 +95,4 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().BoolVarP(&rcnf.Verbose, "verbose", "v", false, "Print qemu command before running it")
 
 	return cmd
-}
-
-func StartQemu(rcnf RunConf) error {
-	qemuBin, err := arch.QemuBinary()
-	if err != nil {
-		return fmt.Errorf("failed to retrieve Qemu binary: %w", err)
-	}
-
-	qemuArgs, err := BuildQemuArgs(rcnf.Logger, &rcnf)
-	if err != nil {
-		return err
-	}
-
-	if rcnf.QemuPrint || rcnf.Verbose {
-		var sb strings.Builder
-		sb.WriteString(qemuBin)
-		for _, arg := range qemuArgs {
-			sb.WriteString(" ")
-			if len(arg) > 0 && arg[0] == '-' {
-				sb.WriteString("\\\n\t")
-			}
-			sb.WriteString(arg)
-		}
-
-		fmt.Printf("%s\n", sb.String())
-		// We don't want to return early if running in verbose mode
-		if rcnf.QemuPrint {
-			return nil
-		}
-	}
-
-	qemuPath, err := exec.LookPath(qemuBin)
-	if err != nil {
-		return err
-	}
-
-	return unix.Exec(qemuPath, append([]string{qemuBin}, qemuArgs...), nil)
 }

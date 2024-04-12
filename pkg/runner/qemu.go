@@ -6,10 +6,12 @@ package runner
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/arch"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
@@ -108,4 +110,41 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 	}
 
 	return qemuArgs, nil
+}
+
+func StartQemu(rcnf RunConf) error {
+	qemuBin, err := arch.QemuBinary()
+	if err != nil {
+		return fmt.Errorf("failed to retrieve Qemu binary: %w", err)
+	}
+
+	qemuArgs, err := BuildQemuArgs(rcnf.Logger, &rcnf)
+	if err != nil {
+		return err
+	}
+
+	if rcnf.QemuPrint || rcnf.Verbose {
+		var sb strings.Builder
+		sb.WriteString(qemuBin)
+		for _, arg := range qemuArgs {
+			sb.WriteString(" ")
+			if len(arg) > 0 && arg[0] == '-' {
+				sb.WriteString("\\\n\t")
+			}
+			sb.WriteString(arg)
+		}
+
+		fmt.Printf("%s\n", sb.String())
+		// We don't want to return early if running in verbose mode
+		if rcnf.QemuPrint {
+			return nil
+		}
+	}
+
+	qemuPath, err := exec.LookPath(qemuBin)
+	if err != nil {
+		return err
+	}
+
+	return unix.Exec(qemuPath, append([]string{qemuBin}, qemuArgs...), nil)
 }
