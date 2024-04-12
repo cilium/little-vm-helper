@@ -12,6 +12,8 @@ type RunConf struct {
 	Image string
 	// kernel filename to boot with. (if empty no -kernel option will be passed to qemu)
 	KernelFname string
+	// kernel append args to add when a kernel is passed to qemu
+	KernelAppendArgs []string
 	// Do not run the qemu command, just print it
 	QemuPrint bool
 	// Do not use KVM acceleration, even if /dev/kvm exists
