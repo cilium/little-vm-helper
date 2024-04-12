@@ -78,9 +78,10 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 			"earlyprintk=ttyS0",
 			"panic=-1",
 		}
+		appendArgs = append(appendArgs, rcnf.KernelAppendArgs...)
 		qemuArgs = append(qemuArgs,
 			"-kernel", rcnf.KernelFname,
-			"-append", fmt.Sprintf("%s", strings.Join(appendArgs, " ")),
+			"-append", strings.Join(appendArgs, " "),
 		)
 	}
 
