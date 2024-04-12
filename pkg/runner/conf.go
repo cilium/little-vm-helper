@@ -4,7 +4,6 @@
 package runner
 
 import (
-	"github.com/cilium/little-vm-helper/pkg/runner"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +26,7 @@ type RunConf struct {
 
 	// Disable the network connection to the VM
 	DisableNetwork bool
-	ForwardedPorts runner.PortForwards
+	ForwardedPorts PortForwards
 
 	Logger *logrus.Logger
 
