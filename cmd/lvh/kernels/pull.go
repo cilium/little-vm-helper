@@ -16,8 +16,10 @@ import (
 )
 
 func pullCommand() *cobra.Command {
-	var platform string
-	var ci bool
+	var (
+		platform string
+		repo     string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "pull <tag>",
@@ -38,7 +40,10 @@ Examples:
   lvh kernels pull 5.10-main --dir mykernels
 
   # Pull the latest tags available for version 5.15 without using 5.15-main
-  lvh kernels pull $(lvh kernels catalog 5.15 | tail -n 2 | head -n 1)`,
+  lvh kernels pull $(lvh kernels catalog 5.15 | tail -n 2 | head -n 1)
+
+  # Pull the latest CI-generated images for version bpf-next
+  lvh kernels pull bpf-next-main --repo quay.io/lvh-images/kernel-images-ci`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			re := regexp.MustCompile(kernelTagRegex)
@@ -50,11 +55,6 @@ Examples:
 			sPlatform := strings.SplitN(platform, "/", 2)
 			if len(sPlatform) < 2 {
 				return fmt.Errorf("platform is malformed, it must be <os>/<arch>: %s", platform)
-			}
-
-			repo := kernelImageRepository
-			if ci {
-				repo = fmt.Sprintf("%s-ci", repo)
 			}
 
 			srcImage := fmt.Sprintf("%s:%s", repo, args[0])
@@ -78,7 +78,7 @@ Examples:
 
 	cmd.Flags().StringVarP(&platform, "platform", "p", runtime.GOOS+"/"+runtime.GOARCH, "platform for the kernel image <os>/<arch>")
 	cmd.Flags().StringVarP(&dirName, dirNameCommand, "d", ".", dirNameHelp)
-	cmd.Flags().BoolVar(&ci, ciCommand, false, ciHelp)
+	cmd.Flags().StringVar(&repo, repoCommand, kernelImageRepository, repoHelp)
 
 	return cmd
 }
