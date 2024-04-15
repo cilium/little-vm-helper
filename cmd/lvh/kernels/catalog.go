@@ -16,12 +16,14 @@ const (
 
 	kernelTagRegex = `^(.+)-([0-9]+\.[0-9]+|main)$`
 
-	ciCommand = "ci"
-	ciHelp    = "use CI repositories instead of main ones"
+	repoCommand = "repo"
+	repoHelp    = "specify the OCI repository to pull the image from"
 )
 
 func catalogCommand() *cobra.Command {
-	var ci bool
+	var (
+		repo string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "catalog [version]",
@@ -36,14 +38,12 @@ Examples:
   lvh kernels catalog 6.6
 
   # Retrieve the latest tags available for version bpf-next
-  lvh kernels catalog bpf-next | tail -n 2`,
+  lvh kernels catalog bpf-next | tail -n 2
+
+  # Retrieve the latest CI-generated images for version bpf-next
+  lvh kernels catalog bpf-next --repo quay.io/lvh-images/kernel-images-ci`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			re := regexp.MustCompile(kernelTagRegex)
-
-			repo := kernelImageRepository
-			if ci {
-				repo = fmt.Sprintf("%s-ci", repo)
-			}
 
 			rawTagList, err := crane.ListTags(repo)
 			if err != nil {
@@ -97,7 +97,7 @@ Examples:
 		},
 	}
 
-	cmd.Flags().BoolVar(&ci, ciCommand, false, ciHelp)
+	cmd.Flags().StringVar(&repo, repoCommand, kernelImageRepository, repoHelp)
 
 	return cmd
 }
