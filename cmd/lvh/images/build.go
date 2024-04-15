@@ -16,8 +16,9 @@ import (
 )
 
 func BuildCmd() *cobra.Command {
-	var dirName, imageName string
+	var dirName string
 	var forceRebuild, dryRun, mergeSteps bool
+	var imageNames []string
 
 	cmd := &cobra.Command{
 		Use:   "build",
@@ -55,14 +56,10 @@ func BuildCmd() *cobra.Command {
 				MergeSteps:   mergeSteps,
 			}
 			start := time.Now()
-			if imageName == "" {
+			if imageNames == nil {
 				res = forest.BuildAllImages(bldConf)
 			} else {
-				res, err = forest.BuildImage(bldConf, imageName)
-				if err != nil {
-					log.WithField("image", imageName).WithError(err).Error("error bulding image")
-					return err
-				}
+				res = forest.BuildImages(bldConf, imageNames)
 			}
 			elapsed := time.Since(start)
 
@@ -84,8 +81,8 @@ func BuildCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&dirName, "dir", "", "directory to keep the images (configuration will be saved in <dir>/images.json and images in <dir>/images)")
-	cmd.Flags().StringVar(&imageName, "image", "", "image to build. If empty, all images will be build.")
 	cmd.MarkFlagRequired("dir")
+	cmd.Flags().StringArrayVarP(&imageNames, "image", "i", nil, "images to build. If empty, all images will be built.")
 	cmd.Flags().BoolVar(&forceRebuild, "force-rebuild", false, "rebuild all images, even if they exist")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "do the whole thing, but instead of building actual images create empty files")
 	cmd.Flags().BoolVar(&mergeSteps, "merge-steps", true, "Merge steps when possible to improve performance. Disabling this might be useufl to investigate action issues.")
