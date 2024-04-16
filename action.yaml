@@ -12,6 +12,10 @@ inputs:
     description: 'LVH image version'
     required: true
     default: '5.10-main'
+  images-folder-parent:
+    description: 'Parent folder in which to put the downloaded images'
+    required: false
+    default: ''
   lvh-version:
     description: 'LVH cli version (Docker tag)'
     required: true
@@ -151,9 +155,10 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        sudo mkdir /images; sudo chmod 777 /images
-        /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "/"
-        find /images
+        sudo mkdir -p ${{ inputs.images-folder-parent }}/images; sudo chmod 777 ${{ inputs.images-folder-parent }}/images
+        /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/"
+        find ${{ inputs.images-folder-parent }}/images -type f -exec sudo chmod 666 {} +
+        find ${{ inputs.images-folder-parent }}/images
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -169,7 +174,7 @@ runs:
           extraArgs+=("-p" "${{ inputs.port-forward }}")
         fi
         sudo touch /tmp/console.log
-        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image /images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
+        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
