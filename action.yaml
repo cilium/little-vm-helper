@@ -151,6 +151,10 @@ runs:
       with:
         path: ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}
+    - name: Decompressed cached VM image
+      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' }}
+      shell: bash
+      run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
