@@ -74,7 +74,7 @@ func ExtractImage(ctx context.Context, conf PullConf) (*ExtractResult, error) {
 		return nil, fmt.Errorf("cannot create container from %s: %w", conf.Image, err)
 	}
 	defer func() {
-		err := cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{
+		err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{
 			Force: true,
 		})
 		if err != nil {
