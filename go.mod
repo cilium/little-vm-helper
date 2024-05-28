@@ -4,7 +4,7 @@ module github.com/cilium/little-vm-helper
 go 1.22.1
 
 require (
-	github.com/docker/docker v25.0.5+incompatible
+	github.com/docker/docker v26.1.3+incompatible
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-containerregistry v0.19.1
 	github.com/moby/term v0.5.0
@@ -44,6 +44,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
