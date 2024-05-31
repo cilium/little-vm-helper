@@ -1,7 +1,7 @@
 module github.com/cilium/little-vm-helper
 
 // Keep at .0 to avoid imposing upgrades on developers
-go 1.22.1
+go 1.22.0
 
 require (
 	github.com/docker/docker v26.1.3+incompatible
