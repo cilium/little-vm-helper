@@ -193,7 +193,7 @@ github.com/gogo/protobuf/proto
 # github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 ## explicit
 github.com/golang/groupcache/lru
-# github.com/google/go-containerregistry v0.19.1
+# github.com/google/go-containerregistry v0.19.2
 ## explicit; go 1.18
 github.com/google/go-containerregistry/internal/and
 github.com/google/go-containerregistry/internal/compression
