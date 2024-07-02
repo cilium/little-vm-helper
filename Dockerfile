@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.22.4@sha256:3e731b22f6db4e5a76d957250d9a2bf9c2e2717ff7f97cfd20322e81ba185898 as gobuilder
+FROM --platform=$BUILDPLATFORM golang:1.22.4@sha256:800fde66644c2447abc2a085cbecdcb53d2e21234ec8e80be0c90fc011a93f4b as gobuilder
 WORKDIR /src/little-vm-helper
 COPY . .
 ARG TARGETARCH
