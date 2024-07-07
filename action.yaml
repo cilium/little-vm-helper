@@ -69,7 +69,7 @@ inputs:
     required: true
     default: 'false'
   port-forward:
-    description: 'Additional to SSH port forward ($LOCAL:$VM_PORT)'
+    description: 'Additional to SSH comma-separated port forwards ($LOCAL:$VM_PORT)'
     required: false
 runs:
   using: "composite"
@@ -167,7 +167,10 @@ runs:
           extraArgs+=("--verbose")
         fi
         if [ "${{ inputs.port-forward }}" != "" ]; then
-          extraArgs+=("-p" "${{ inputs.port-forward }}")
+          fwds=($(echo "${{ inputs.port-forward }}" | tr "," "\n"))
+          for fwd in "${fwds[@]}"; do
+            extraArgs+=("-p" "$fwd")
+          done
         fi
         sudo touch /tmp/console.log
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
