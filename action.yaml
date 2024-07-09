@@ -136,7 +136,7 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       id: derive-image-name
       shell: bash
-      run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/\(.*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
+      run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/\([^-]*\)\-\(.*\)/\1/g')" >> $GITHUB_OUTPUT
     - uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
