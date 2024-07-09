@@ -33,6 +33,7 @@
     "renovate/stop-updating",
   ],
   "stopUpdatingLabel": "renovate/stop-updating",
+  "automerge": true,
   "packageRules": [
     {
       "groupName": "all github action dependencies",
