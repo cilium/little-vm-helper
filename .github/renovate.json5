@@ -30,7 +30,6 @@
   },
   "labels": [
     "dependencies",
-    "renovate/stop-updating",
   ],
   "stopUpdatingLabel": "renovate/stop-updating",
   "automerge": true,
