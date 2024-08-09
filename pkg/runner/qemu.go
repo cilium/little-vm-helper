@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/arch"
@@ -30,13 +31,18 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 
 	// quick-and-dirty kvm detection
 	kvmEnabled := false
-	if !rcnf.DisableKVM {
-		if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {
-			qemuArgs = append(qemuArgs, "-enable-kvm")
-			f.Close()
-			kvmEnabled = true
-		} else {
-			log.Info("KVM disabled")
+	if !rcnf.DisableHardwareAccel {
+		switch runtime.GOOS {
+		case "linux":
+			if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {
+				qemuArgs = append(qemuArgs, "-enable-kvm")
+				f.Close()
+				kvmEnabled = true
+			} else {
+				log.Info("KVM disabled")
+			}
+		case "darwin":
+			qemuArgs = append(qemuArgs, "-accel", "hvf")
 		}
 	}
 
