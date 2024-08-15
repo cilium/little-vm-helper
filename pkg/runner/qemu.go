@@ -15,7 +15,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-func getArch(rcnf *RunConf) (*arch.Arch, error) {
+func getArch(rcnf *RunConf) (arch.Arch, error) {
 	a := rcnf.QemuArch
 	if a == "" {
 		a = runtime.GOARCH
