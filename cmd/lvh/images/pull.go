@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	dirName string
-	cache   bool
+	dirName  string
+	cache    bool
+	platform string
 )
 
 func PullCmd() *cobra.Command {
@@ -34,6 +35,7 @@ func PullCmd() *cobra.Command {
 				Image:     args[0],
 				TargetDir: dirName,
 				Cache:     cache,
+				Platform:  platform,
 			}
 			if err := images.PullImage(context.Background(), pcnf); err != nil {
 				return err
@@ -48,6 +50,7 @@ func PullCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&dirName, "dir", "_data", "directory to keep the images (images will be saved in images in <dir>/images)")
 	cmd.Flags().BoolVar(&cache, "cache", false, "cache a compressed version of the image")
+	cmd.Flags().StringVar(&platform, "platform", "", "platform")
 
 	return cmd
 }
