@@ -30,7 +30,11 @@ func (a Arch) Target() string {
 }
 
 func (a Arch) CrossCompiling() bool {
-	return string(a) != runtime.GOARCH
+	return !a.IsNative()
+}
+
+func (a Arch) IsNative() bool {
+	return string(a) == runtime.GOARCH
 }
 
 func (a Arch) CrossCompileMakeArgs() []string {

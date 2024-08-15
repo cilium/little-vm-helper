@@ -44,7 +44,7 @@ func BuildQemuArgs(log *logrus.Logger, rcnf *RunConf) ([]string, error) {
 
 	// quick-and-dirty kvm detection
 	kvmEnabled := false
-	if !rcnf.DisableHardwareAccel {
+	if !rcnf.DisableHardwareAccel && qArch.IsNative() {
 		switch runtime.GOOS {
 		case "linux":
 			if f, err := os.OpenFile("/dev/kvm", os.O_RDWR, 0755); err == nil {
