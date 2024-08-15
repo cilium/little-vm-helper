@@ -45,6 +45,8 @@ type RunConf struct {
 	RootDev string
 
 	QemuMonitorPort int
+
+	QemuArch string
 }
 
 func (rc *RunConf) testImageFname() string {
