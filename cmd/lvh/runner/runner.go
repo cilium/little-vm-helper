@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/cilium/little-vm-helper/pkg/images"
@@ -95,6 +96,7 @@ func RunCommand() *cobra.Command {
 	cmd.Flags().IntVar(&rcnf.QemuMonitorPort, "qemu-monitor-port", 0, "Port for QEMU monitor")
 	cmd.Flags().StringVar(&rcnf.RootDev, "root-dev", "vda", "type of root device (hda or vda)")
 	cmd.Flags().BoolVarP(&rcnf.Verbose, "verbose", "v", false, "Print qemu command before running it")
+	cmd.Flags().StringVar(&rcnf.QemuArch, "qemu-arch", runtime.GOARCH, "specify qemu arch to use")
 
 	return cmd
 }
