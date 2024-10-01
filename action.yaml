@@ -48,15 +48,13 @@ inputs:
   serial-port:
     description: 'Serial port to access VM'
     required: true
-    default: 0
+    default: '0'
   cpu:
     description: 'CPU count'
-    required: true
-    default: 8
+    required: false
   mem:
     description: 'RAM size'
-    required: true
-    default: '6G'
+    required: false
   cpu-kind:
     description: 'CPU kind to use'
     required: true
@@ -173,6 +171,18 @@ runs:
           done
         fi
         sudo touch /tmp/console.log
+        # Determine the amount of cpu and memory to allocate
+        CPU=${{ inputs.cpu }}
+        if [ -z "$CPU" ]; then
+          CPU=$(nproc)
+          echo "cpu unspecified, defaulting to nprocs CPUs: $CPU"
+        fi
+        MEM=${{ inputs.mem }}
+        if [ -z "$MEM" ]; then
+          # Default to 75% of the host memory
+          MEM="$(free -m | awk '/^Mem:/{print int($2 * 0.75)}')M"
+          echo "mem unspecified, defaulting ot 75% of host memory: $MEM"
+        fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=${{ inputs.cpu }} --mem=${{ inputs.mem }} --cpu-kind ${{ inputs.cpu-kind }} \
