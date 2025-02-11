@@ -3,7 +3,7 @@ module github.com/cilium/little-vm-helper
 // Keep at .0 to avoid imposing upgrades on developers
 go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.24.0
 
 require (
 	github.com/docker/docker v27.5.1+incompatible
