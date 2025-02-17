@@ -11,7 +11,7 @@ require (
 	github.com/google/go-containerregistry v0.20.3
 	github.com/moby/term v0.5.2
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.9.0
+	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/mod v0.23.0
 	golang.org/x/sys v0.30.0
