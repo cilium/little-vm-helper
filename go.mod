@@ -6,7 +6,7 @@ go 1.23.0
 toolchain go1.24.0
 
 require (
-	github.com/docker/docker v28.0.0+incompatible
+	github.com/docker/docker v28.0.1+incompatible
 	github.com/go-git/go-git/v5 v5.13.2
 	github.com/google/go-containerregistry v0.20.3
 	github.com/moby/term v0.5.2
