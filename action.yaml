@@ -126,7 +126,7 @@ runs:
       shell: bash
       run: |
         # Disable auto update of man-db for every package
-        sudo rm /var/lib/man-db/auto-update
+        sudo rm /var/lib/man-db/auto-update || true
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
