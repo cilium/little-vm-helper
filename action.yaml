@@ -26,15 +26,15 @@ inputs:
   ssh-port:
     description: 'SSH port for VM on a host'
     required: true
-    default: 2222
+    default: '2222'
   ssh-connect-wait-retries:
     description: 'Number of retries to connect to the SSH server'
     required: true
-    default: 300
+    default: '300'
   ssh-connect-wait-timeout:
     description: 'Timeout in seconds between retries to connect to the SSH server'
     required: true
-    default: 1
+    default: '1'
   host-mount:
     description: 'Host dir path to mount in /host dir of a VM'
     required: true
@@ -77,7 +77,7 @@ runs:
       id: find-lvh-cli
       shell: bash
       run: |
-        if [ -f "/bin/lvh" ]; then
+        if command -v lvh 2>&1 >/dev/null; then
           echo 'skip=true' >> $GITHUB_OUTPUT
         fi
         runner_os_id=$(grep VERSION_ID /etc/os-release | cut -d= -f 2 | sed 's/"//g')
@@ -88,6 +88,7 @@ runs:
 
         dependencies_sha=$(echo ${dependencies} | md5sum)
         echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
+
     - name: Install LVH cli
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
       shell: bash
@@ -97,6 +98,7 @@ runs:
         docker rm $cid
         chmod +x /tmp/lvh
         sudo mv /tmp/lvh /bin/lvh
+
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -104,6 +106,7 @@ runs:
       with:
         path: /tmp/.ubuntu-pkgs
         key: ${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
+
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
       shell: bash
@@ -121,6 +124,7 @@ runs:
         [ $success -eq 1 ] || exit 42
         sudo mkdir -p /tmp/.ubuntu-pkgs
         sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
+
     - name: Install dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
@@ -130,21 +134,25 @@ runs:
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
+
     - name: Derive VM image file name
       if: ${{ inputs.provision == 'true' }}
       id: derive-image-name
       shell: bash
       run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/^\(.*\)\-[0-9.]*\(\-[^-]*\)*\(@sha256:.*\)*$/\1/g')" >> $GITHUB_OUTPUT
+
     - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
         path: ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}
+
     - name: Decompressed cached VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' }}
       shell: bash
       run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
+
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
@@ -153,6 +161,7 @@ runs:
         /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/"
         find ${{ inputs.images-folder-parent }}/images -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images
+
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -188,6 +197,7 @@ runs:
             --cpu=$CPU --mem=$MEM --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
             ${extraArgs[@]}
+
     - name: Wait for VM's SSH Server
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -206,6 +216,7 @@ runs:
           cat /tmp/console.log
           exit 42
         fi
+
     - name: Run test cmd in VM
       shell: bash
       run: |
