@@ -17,6 +17,10 @@ Bump up the default version in action.yaml and open a pull request against `main
     git commit -s -m "Prepare for $RELEASE release"
     git push origin HEAD
 
+Or use:
+
+    ./scripts/prepare-for-release.sh
+
 Wait for the PR to be reviewed and merged.
 
 ## Tag a release
