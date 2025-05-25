@@ -5,6 +5,7 @@ package kernels
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
 	"github.com/sirupsen/logrus"
@@ -12,8 +13,6 @@ import (
 )
 
 func buildCommand() *cobra.Command {
-	var arch string
-
 	cmd := &cobra.Command{
 		Use:   "build <kernel>",
 		Short: "build kernel",
@@ -21,11 +20,12 @@ func buildCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log := logrus.New()
 			kname := args[0]
+			arch := cmd.Flag(archFlag).Value.String()
 			return kernels.BuildKernel(context.Background(), log, dirName, kname, false /* TODO: add fetch flag */, arch)
 		},
 	}
 
-	cmd.Flags().StringVar(&arch, "arch", "", "target architecture to build the kernel, e.g. 'amd64' or 'arm64' (default to native architecture)")
+	cmd.Flags().String(archFlag, runtime.GOARCH, archHelp)
 	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
 	cmd.MarkFlagRequired(dirNameCommand)
 

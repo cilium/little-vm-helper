@@ -5,6 +5,7 @@ package kernels
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
 	"github.com/sirupsen/logrus"
@@ -28,15 +29,16 @@ func configureCommand() *cobra.Command {
 				log.Fatal(err)
 			}
 
+			arch := cmd.Flag(archFlag).Value.String()
 			kname := args[0]
-			if err := kd.ConfigureKernel(context.Background(), log, kname, cmd.Flag(archFlag).Value.String()); err != nil {
+			if err := kd.ConfigureKernel(context.Background(), log, kname, arch); err != nil {
 				log.Fatal(err)
 			}
 
 		},
 	}
 
-	cmd.Flags().String(archFlag, "", archHelp)
+	cmd.Flags().String(archFlag, runtime.GOARCH, archHelp)
 	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
 	cmd.MarkFlagRequired("dir")
 
