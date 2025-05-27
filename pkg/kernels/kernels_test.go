@@ -17,7 +17,7 @@ type testLogger struct {
 }
 
 func (tl testLogger) Write(p []byte) (n int, err error) {
-	tl.Logf((string)(p))
+	tl.Log((string)(p))
 	return len(p), nil
 }
 
