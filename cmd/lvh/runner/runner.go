@@ -46,6 +46,7 @@ func RunCommand() *cobra.Command {
 				pcnf := images.PullConf{
 					Image:     rcnf.Image,
 					TargetDir: dirName,
+					Platform:  rcnf.QemuArch,
 				}
 				// Not a local file reference, could this be an OCI image?
 				if err := images.PullImage(context.Background(), pcnf); err != nil {
