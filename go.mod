@@ -5,7 +5,7 @@ go 1.24.0
 
 require (
 	github.com/docker/docker v28.2.2+incompatible
-	github.com/go-git/go-git/v5 v5.16.0
+	github.com/go-git/go-git/v5 v5.16.1
 	github.com/google/go-containerregistry v0.20.5
 	github.com/moby/term v0.5.2
 	github.com/sirupsen/logrus v1.9.3
