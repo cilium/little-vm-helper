@@ -32,7 +32,7 @@ image:
 
 .PHONY: install
 install:
-	GOARCH=${TARGET_ARCH} CGO_ENABLED=0 $(GO) install ./cmd/lvh
+	GOARCH=${TARGET_ARCH} CGO_ENABLED=0 $(GO) install $(GO_BUILD_FLAGS) ./cmd/lvh
 
 clean:
 	rm -f lvh
