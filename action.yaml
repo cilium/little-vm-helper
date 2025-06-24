@@ -73,6 +73,10 @@ inputs:
     description: 'VM architecture (amd64 (default) or arm64)'
     default: 'amd64'
     required: false
+  kernel-version:
+    description: 'Kernel version (if empty, a kernel from the image will be used)'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -166,6 +170,22 @@ runs:
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
 
+    - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
+      id: cache-lvh-kernel
+      with:
+        path: ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}
+        key: lvh-kernel-${{ inputs.kernel }}_${{ inputs.arch }}
+
+    - name: Fetch kernel
+      id: fetch-kernel
+      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && steps.cache-lvh-kernel.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
+        sudo mkdir -p ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}; sudo chmod -R 777 ${{ inputs.images-folder-parent }}/kernels
+        /bin/lvh kernel pull --platform=linux/${{ inputs.arch }} --dir "${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}" ${{ inputs.kernel-version }}
+        echo lvh_kernel_path=$(find ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}/boot/ -name "vmlinuz-*" -type f | head -1) >> "$GITHUB_OUTPUT"
+
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -173,6 +193,9 @@ runs:
         extraArgs=()
         if [ ! -z "${{ inputs.kernel }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel }}")
+        fi
+        if [ "${{ steps.fetch-kernel.outputs.lvh_kernel_path }}" != "" ]; then
+          extraArgs+=("--kernel ${{ steps.fetch-kernel.outputs.lvh_kernel_path }}")
         fi
         if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
