@@ -69,6 +69,10 @@ inputs:
   port-forward:
     description: 'Additional to SSH comma-separated port forwards ($LOCAL:$VM_PORT)'
     required: false
+  arch:
+    description: 'VM architecture (amd64 (default) or arm64)'
+    default: 'amd64'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -145,22 +149,22 @@ runs:
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
-        path: ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
-        key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}
+        path: ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
+        key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}_${{ inputs.arch }}
 
     - name: Decompressed cached VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' }}
       shell: bash
-      run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
+      run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
 
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        sudo mkdir -p ${{ inputs.images-folder-parent }}/images; sudo chmod 777 ${{ inputs.images-folder-parent }}/images
-        /bin/lvh images pull --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/"
-        find ${{ inputs.images-folder-parent }}/images -type f -exec sudo chmod 666 {} +
-        find ${{ inputs.images-folder-parent }}/images
+        sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images; sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images
+        /bin/lvh images pull --platform linux/${{ inputs.arch}} --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
+        find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
+        find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
 
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
@@ -192,7 +196,7 @@ runs:
           MEM="$(free -m | awk '/^Mem:/{print int($2 * 0.75)}')M"
           echo "mem unspecified, defaulting ot 75% of host memory: $MEM"
         fi
-        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
+        sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=$CPU --mem=$MEM --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
