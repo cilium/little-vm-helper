@@ -76,7 +76,7 @@ inputs:
   kernel-version:
     description: 'Kernel version (if empty, a kernel from the image will be used)'
     required: false
-    default: 'false'
+    default: ''
 runs:
   using: "composite"
   steps:
