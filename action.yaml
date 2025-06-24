@@ -59,7 +59,7 @@ inputs:
     description: 'CPU kind to use'
     required: true
     default: 'host'
-  kernel:
+  kernel-path:
     description: 'Path to kernel image to boot with'
     required: false
   verbose:
@@ -191,8 +191,8 @@ runs:
       shell: bash
       run: |
         extraArgs=()
-        if [ ! -z "${{ inputs.kernel }}" ]; then
-          extraArgs+=("--kernel" "${{ inputs.kernel }}")
+        if [ ! -z "${{ inputs.kernel-path }}" ]; then
+          extraArgs+=("--kernel" "${{ inputs.kernel-path }}")
         fi
         if [ "${{ steps.fetch-kernel.outputs.lvh_kernel_path }}" != "" ]; then
           extraArgs+=("--kernel ${{ steps.fetch-kernel.outputs.lvh_kernel_path }}")
