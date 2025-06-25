@@ -175,7 +175,7 @@ runs:
       id: cache-lvh-kernel
       with:
         path: ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}
-        key: lvh-kernel-${{ inputs.kernel }}_${{ inputs.arch }}
+        key: lvh-kernel-${{ inputs.kernel-version }}_${{ inputs.arch }}
 
     - name: Fetch kernel
       id: fetch-kernel
