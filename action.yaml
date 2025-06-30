@@ -206,6 +206,7 @@ runs:
             extraArgs+=("-p" "$fwd")
           done
         fi
+
         sudo touch /tmp/console.log
         # Determine the amount of cpu and memory to allocate
         CPU=${{ inputs.cpu }}
@@ -223,6 +224,7 @@ runs:
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
             --cpu=$CPU --mem=$MEM --cpu-kind ${{ inputs.cpu-kind }} \
             --console-log-file /tmp/console.log \
+            --qemu-arch ${{ inputs.arch }} \
             ${extraArgs[@]}
 
     - name: Wait for VM's SSH Server
