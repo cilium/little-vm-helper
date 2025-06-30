@@ -199,6 +199,11 @@ runs:
       shell: bash
       run: |
         /bin/lvh kernel pull --platform=linux/${{ inputs.arch }} --dir "${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}" ${{ inputs.kernel-version }}
+
+    - name: Set kernel path
+      id: kernel-path
+      shell: bash
+      run: |
         echo lvh_kernel_path=$(find ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}/boot/ -name "vmlinuz-*" -type f | head -1) >> "$GITHUB_OUTPUT"
 
     - name: Start VM
@@ -209,8 +214,8 @@ runs:
         if [ ! -z "${{ inputs.kernel-path }}" ]; then
           extraArgs+=("--kernel" "${{ inputs.kernel-path }}")
         fi
-        if [ "${{ steps.fetch-kernel.outputs.lvh_kernel_path }}" != "" ]; then
-          extraArgs+=("--kernel ${{ steps.fetch-kernel.outputs.lvh_kernel_path }}")
+        if [ "${{ steps.kernel-path.outputs.lvh_kernel_path }}" != "" ]; then
+          extraArgs+=("--kernel ${{ steps.kernel-path.outputs.lvh_kernel_path }}")
         fi
         if [ "${{ inputs.verbose }}" == "true" ]; then
           extraArgs+=("--verbose")
