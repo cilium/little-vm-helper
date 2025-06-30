@@ -206,6 +206,9 @@ runs:
             extraArgs+=("-p" "$fwd")
           done
         fi
+        if [ ! -z "${{ inputs.cpu-kind }}" ]; then
+          extraArgs+=("--cpu-kind" "${{ inputs.cpu-kind }}")
+        fi
 
         sudo touch /tmp/console.log
         # Determine the amount of cpu and memory to allocate
@@ -222,7 +225,7 @@ runs:
         fi
         sudo /bin/lvh run --host-mount=${{ inputs.host-mount }} --image ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2 \
             --daemonize -p ${{ inputs.ssh-port }}:22 --serial-port ${{ inputs.serial-port }} \
-            --cpu=$CPU --mem=$MEM --cpu-kind ${{ inputs.cpu-kind }} \
+            --cpu=$CPU --mem=$MEM \
             --console-log-file /tmp/console.log \
             --qemu-arch ${{ inputs.arch }} \
             ${extraArgs[@]}
