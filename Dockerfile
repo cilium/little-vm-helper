@@ -4,5 +4,5 @@ COPY . .
 ARG TARGETARCH
 RUN TARGET_ARCH=$TARGETARCH make little-vm-helper
 
-FROM busybox@sha256:f85340bf132ae937d2c2a763b8335c9bab35d6e8293f70f606b9c6178d84f42b
+FROM busybox@sha256:f9a104fddb33220ec80fc45a4e606c74aadf1ef7a3832eb0b05be9e90cd61f5f
 COPY --from=gobuilder /src/little-vm-helper/lvh /usr/bin/lvh
