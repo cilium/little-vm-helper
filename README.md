@@ -186,10 +186,16 @@ For example:
 go run ./cmd/lvh run --image _data/images/base.qcow2 --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
 ```
 
-Or, to with the kernel installed in the image:
+Or, with the kernel installed in the image, using the image bootloader:
 ```bash
 go run ./cmd/lvh run --image _data/images/base.qcow2
 ```
+
+Note that if you are using [cilium/little-vm-helper-images](https://github.com/cilium/little-vm-helper-images),
+for now, only amd64 images contain a compatible bootloader. So even though
+kernels are present in the arm64 images, you'll need to supply it to QEMU
+through the `--kernel` option from your host. See the above section "[Download
+Kernels](#download-kernels)" on how to download kernels from these images.
 
 OCI images are also supported:
 ```bash
