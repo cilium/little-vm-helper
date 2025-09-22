@@ -4,6 +4,10 @@ inputs:
   test-name:
     description: 'Unique test name'
     required: true
+  image-repo:
+    description: 'Docker repository for the images.'
+    required: true
+    default: 'quay.io/lvh-images'
   image:
     description: 'LVH image name ("base", "kind", etc)'
     required: true
@@ -182,7 +186,7 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
-        lvh images pull --platform linux/${{ inputs.arch}} --cache quay.io/lvh-images/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
+        lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
 
