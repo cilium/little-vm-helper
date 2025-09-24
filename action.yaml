@@ -121,7 +121,7 @@ runs:
 
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
-      uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
@@ -170,7 +170,7 @@ runs:
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
 
-    - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+    - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
@@ -190,7 +190,7 @@ runs:
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
 
-    - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+    - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
       id: cache-lvh-kernel
       with:
