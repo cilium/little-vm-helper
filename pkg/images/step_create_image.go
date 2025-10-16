@@ -227,7 +227,7 @@ func (s *CreateImage) makeDerivedImage(ctx context.Context) error {
 	}
 
 	if len(s.imgCnf.Packages) > 0 {
-		cmd = exec.CommandContext(ctx, VirtCustomize,
+		cmd = exec.CommandContext(ctx, VirtCustomize, "-v", "-x",
 			"-a", imgFname,
 			"--install", strings.Join(s.imgCnf.Packages, ","),
 		)
