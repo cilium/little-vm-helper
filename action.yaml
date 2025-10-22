@@ -106,7 +106,19 @@ runs:
         fi
         echo "dependency_list=${dependencies}" >> $GITHUB_OUTPUT
 
-        dependencies_sha=$(echo ${dependencies} | md5sum)
+        deps_w_versions=""
+        sudo apt update
+        for dep in ${dependencies}
+        do
+          # Simulate package install to fetch package version;
+          # head -n1 in case there are multiple packages being installed (eg: for qemu-system);
+          # Output line similar to:
+          # Inst virtinst (1:4.1.0-3ubuntu0.1 Ubuntu:24.04/noble-updates [all])
+          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2-)
+          deps_w_versions="${dep}_${version} ${deps_w_versions}"
+        done
+        # Remove ending "-" character added by md5sum
+        dependencies_sha=$(echo ${deps_w_versions} | md5sum | cut -d' ' -f1)
         echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
 
     - name: Install LVH cli
@@ -125,7 +137,7 @@ runs:
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
-        key: ${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-pkgs-cilium-little-vm-helper-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
+        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
 
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
