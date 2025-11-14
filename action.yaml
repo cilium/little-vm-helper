@@ -23,7 +23,7 @@ inputs:
   lvh-version:
     description: 'LVH cli version (Docker tag)'
     required: true
-    default: 'v0.0.23'
+    default: 'v0.0.28'
   cmd:
     description: 'Commands to run in a VM (any occurance of "$" within "cmd" must be escaped)'
     required: true
@@ -120,7 +120,6 @@ runs:
         # Remove ending "-" character added by md5sum
         dependencies_sha=$(echo ${deps_w_versions} | md5sum | cut -d' ' -f1)
         echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
-
     - name: Install LVH cli
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
       shell: bash
@@ -130,7 +129,6 @@ runs:
         docker rm $cid
         chmod +x /tmp/lvh
         sudo mv /tmp/lvh /bin/lvh
-
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
@@ -138,7 +136,6 @@ runs:
       with:
         path: /tmp/.ubuntu-pkgs
         key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
-
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
       shell: bash
@@ -156,7 +153,6 @@ runs:
         [ $success -eq 1 ] || exit 42
         sudo mkdir -p /tmp/.ubuntu-pkgs
         sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
-
     - name: Install dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
@@ -166,13 +162,11 @@ runs:
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
-
     - name: Derive VM image file name
       if: ${{ inputs.provision == 'true' }}
       id: derive-image-name
       shell: bash
       run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/^\(.*\)\-[0-9.]*\(\-[^-]*\)*\(@sha256:.*\)*$/\1/g')" >> $GITHUB_OUTPUT
-
     - name: Create dirs for image and kernel
       shell: bash
       run: |
@@ -181,19 +175,16 @@ runs:
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
-
     - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
         path: ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}_${{ inputs.arch }}
-
     - name: Decompressed cached VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' }}
       shell: bash
       run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
-
     - name: Fetch VM image
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
       shell: bash
@@ -201,27 +192,23 @@ runs:
         lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
-
     - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
       id: cache-lvh-kernel
       with:
         path: ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}
         key: lvh-kernel-${{ inputs.kernel-version }}_${{ inputs.arch }}
-
     - name: Fetch kernel
       id: fetch-kernel
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && steps.cache-lvh-kernel.outputs.cache-hit != 'true' }}
       shell: bash
       run: |
         lvh kernel pull --platform=linux/${{ inputs.arch }} --dir "${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}" ${{ inputs.kernel-version }}
-
     - name: Set kernel path
       id: kernel-path
       shell: bash
       run: |
         echo lvh_kernel_path=$(find ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}/boot/ -name "vmlinuz-*" -type f | head -1) >> "$GITHUB_OUTPUT"
-
     - name: Start VM
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -265,7 +252,6 @@ runs:
             --console-log-file /tmp/console.log \
             --qemu-arch ${{ inputs.arch }} \
             ${extraArgs[@]}
-
     - name: Wait for VM's SSH Server
       if: ${{ inputs.provision == 'true' }}
       shell: bash
@@ -284,7 +270,6 @@ runs:
           cat /tmp/console.log
           exit 42
         fi
-
     - name: Run test cmd in VM
       shell: bash
       run: |
