@@ -131,7 +131,7 @@ runs:
         sudo mv /tmp/lvh /bin/lvh
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
-      uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+      uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
@@ -175,7 +175,7 @@ runs:
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
-    - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+    - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
@@ -192,7 +192,7 @@ runs:
         lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
-    - uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+    - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
       id: cache-lvh-kernel
       with:
