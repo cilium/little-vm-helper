@@ -4,11 +4,10 @@
 package kernels
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,7 +41,7 @@ var (
 )
 
 func TestDir(t *testing.T) {
-	xlog := logrus.New()
+	xlog := slogger.New()
 	xlog.SetOutput(testLogger{t})
 	configs := []*Conf{
 		nil,
@@ -55,7 +54,7 @@ func TestDir(t *testing.T) {
 	for _, conf := range configs {
 		// NB: anonymous function so that os.RemoveAll() is called in all iterations
 		func() {
-			dir, err := ioutil.TempDir("", "test_kernel")
+			dir, err := os.MkdirTemp("", "test_kernel")
 			assert.Nil(t, err)
 			defer os.RemoveAll(dir)
 			err = InitDir(xlog, dir, conf, InitDirFlags{Force: false, BackupConf: false})

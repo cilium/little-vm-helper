@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ func listCommand() *cobra.Command {
 		Use:   "list",
 		Short: "list available kernels (by reading config file in directory)",
 		Run: func(cmd *cobra.Command, _ []string) {
-			log := logrus.New()
+			log := slogger.New()
 			kd, err := kernels.LoadDir(dirName)
 			if err != nil {
 				log.Fatal(err)

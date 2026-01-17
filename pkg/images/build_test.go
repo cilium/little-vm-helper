@@ -4,12 +4,12 @@
 package images
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +22,13 @@ func (tl testLogger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// testWriterHandler wraps an io.Writer to create a slog handler for testing
+type testWriterHandler struct {
+	w io.Writer
+}
+
 func TestImageBuilds(t *testing.T) {
-	xlog := logrus.New()
+	xlog := slogger.New()
 	xlog.SetOutput(testLogger{t})
 
 	tests := []struct {
@@ -172,7 +177,7 @@ func TestImageBuilds(t *testing.T) {
 	for i := range tests {
 		// NB: anonymous function so that os.RemoveAll() is called in all iterations
 		func() {
-			dir, err := ioutil.TempDir("", "test_build_images")
+			dir, err := os.MkdirTemp("", "test_build_images")
 			imagesDir := dir
 			os.Mkdir(imagesDir, 0755)
 			assert.Nil(t, err)

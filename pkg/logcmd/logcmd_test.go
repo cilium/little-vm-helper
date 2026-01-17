@@ -5,73 +5,51 @@ package logcmd
 
 import (
 	"context"
-	"io/ioutil"
 	"os/exec"
 	"testing"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/stretchr/testify/assert"
 )
 
-type logrusRecorder struct {
-	Level    logrus.Level
-	Messages []string
-}
-
-func (r *logrusRecorder) Levels() []logrus.Level {
-	return []logrus.Level{r.Level}
-}
-
-func (r *logrusRecorder) Fire(e *logrus.Entry) error {
-	r.Messages = append(r.Messages, e.Message)
-	return nil
-}
-
 func TestLogcmd(t *testing.T) {
 	cmd := exec.Command("/bin/sh", "-c", "echo FOO>&2; echo LALA")
-	log := logrus.New()
-	log.SetOutput(ioutil.Discard)
 
-	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
-	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
-	log.AddHook(&infoRecorder)
-	log.AddHook(&warnRecorder)
+	infoRecorder := slogger.NewRecordingHandler(slogger.LevelInfo)
+	warnRecorder := slogger.NewRecordingHandler(slogger.LevelWarn)
+	multiHandler := slogger.NewMultiHandler(infoRecorder, warnRecorder)
+	log := slogger.NewWithHandler(multiHandler)
 
-	logStdout := getLogfForLevel(log, logrus.InfoLevel)
-	logStderr := getLogfForLevel(log, logrus.WarnLevel)
+	logStdout := getLogfForLevel(log, slogger.LevelInfo)
+	logStderr := getLogfForLevel(log, slogger.LevelWarn)
 	err := runAndLogCommand(nil, cmd, logStdout, logStderr)
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"stderr> FOO\n"}, warnRecorder.Messages)
-	assert.Equal(t, []string{"stdout> LALA\n"}, infoRecorder.Messages)
+	assert.Equal(t, []string{"stderr> FOO\n"}, warnRecorder.Messages())
+	assert.Equal(t, []string{"stdout> LALA\n"}, infoRecorder.Messages())
 }
 
 func TestLogcmdFail(t *testing.T) {
 	cmd := exec.Command("/bin/sh", "-c", "exit 1")
-	log := logrus.New()
-	log.SetOutput(ioutil.Discard)
 
-	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
-	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
-	log.AddHook(&infoRecorder)
-	log.AddHook(&warnRecorder)
+	infoRecorder := slogger.NewRecordingHandler(slogger.LevelInfo)
+	warnRecorder := slogger.NewRecordingHandler(slogger.LevelWarn)
+	multiHandler := slogger.NewMultiHandler(infoRecorder, warnRecorder)
+	log := slogger.NewWithHandler(multiHandler)
 
-	logStdout := getLogfForLevel(log, logrus.InfoLevel)
-	logStderr := getLogfForLevel(log, logrus.WarnLevel)
+	logStdout := getLogfForLevel(log, slogger.LevelInfo)
+	logStderr := getLogfForLevel(log, slogger.LevelWarn)
 	err := runAndLogCommand(nil, cmd, logStdout, logStderr)
 	assert.Error(t, err)
-	assert.Nil(t, warnRecorder.Messages)
-	assert.Equal(t, []string(nil), infoRecorder.Messages)
+	assert.Equal(t, 0, len(warnRecorder.Messages()))
+	assert.Equal(t, 0, len(infoRecorder.Messages()))
 }
 
 func TestLogcmdTimeout(t *testing.T) {
-	log := logrus.New()
-	log.SetOutput(ioutil.Discard)
-
-	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
-	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
-	log.AddHook(&infoRecorder)
-	log.AddHook(&warnRecorder)
+	infoRecorder := slogger.NewRecordingHandler(slogger.LevelInfo)
+	warnRecorder := slogger.NewRecordingHandler(slogger.LevelWarn)
+	multiHandler := slogger.NewMultiHandler(infoRecorder, warnRecorder)
+	log := slogger.NewWithHandler(multiHandler)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 	defer cancel()
@@ -80,12 +58,10 @@ func TestLogcmdTimeout(t *testing.T) {
 }
 
 func TestLogcmdNoTimeout(t *testing.T) {
-	log := logrus.New()
-	log.SetOutput(ioutil.Discard)
-	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
-	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
-	log.AddHook(&infoRecorder)
-	log.AddHook(&warnRecorder)
+	infoRecorder := slogger.NewRecordingHandler(slogger.LevelInfo)
+	warnRecorder := slogger.NewRecordingHandler(slogger.LevelWarn)
+	multiHandler := slogger.NewMultiHandler(infoRecorder, warnRecorder)
+	log := slogger.NewWithHandler(multiHandler)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -94,18 +70,16 @@ func TestLogcmdNoTimeout(t *testing.T) {
 }
 
 func TestRunAndLogCommandsContext(t *testing.T) {
-	log := logrus.New()
-	log.SetOutput(ioutil.Discard)
-	infoRecorder := logrusRecorder{Level: logrus.InfoLevel}
-	warnRecorder := logrusRecorder{Level: logrus.WarnLevel}
-	log.AddHook(&infoRecorder)
-	log.AddHook(&warnRecorder)
+	infoRecorder := slogger.NewRecordingHandler(slogger.LevelInfo)
+	warnRecorder := slogger.NewRecordingHandler(slogger.LevelWarn)
+	multiHandler := slogger.NewMultiHandler(infoRecorder, warnRecorder)
+	log := slogger.NewWithHandler(multiHandler)
 
 	err := RunAndLogCommandsContext(context.Background(), log,
 		[]string{"/bin/sh", "-c", "echo FOO"},
 		[]string{"/bin/sh", "-c", "echo LALA>&2"},
 	)
 	assert.Nil(t, err)
-	assert.Equal(t, []string{"starting command", "stdout> FOO\n", "starting command"}, infoRecorder.Messages)
-	assert.Equal(t, []string{"stderr> LALA\n"}, warnRecorder.Messages)
+	assert.Equal(t, []string{"starting command", "stdout> FOO\n", "starting command"}, infoRecorder.Messages())
+	assert.Equal(t, []string{"stderr> LALA\n"}, warnRecorder.Messages())
 }

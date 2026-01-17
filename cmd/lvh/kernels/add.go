@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ func addCommand() *cobra.Command {
 		Example: kernels.GetExamplesText(),
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			log := logrus.New()
+			log := slogger.New()
 
 			kconf := kernels.KernelConf{
 				Name: args[0],

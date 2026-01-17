@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/cilium/little-vm-helper/pkg/images"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ func BuildCmd() *cobra.Command {
 		Use:   "build",
 		Short: "Build VM images",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			log := logrus.New()
+			log := slogger.New()
 			imagesDir := filepath.Join(dirName, "images")
 			configFname := filepath.Join(dirName, images.DefaultConfFile)
 
