@@ -8,7 +8,7 @@ import (
 	"runtime"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ func buildCommand() *cobra.Command {
 		Short: "build kernel",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log := logrus.New()
+			log := slogger.New()
 			kname := args[0]
 			arch := cmd.Flag(archFlag).Value.String()
 			return kernels.BuildKernel(context.Background(), log, dirName, kname, false /* TODO: add fetch flag */, arch)

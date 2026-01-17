@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ func removeCommand() *cobra.Command {
 		Short: "remove kernel",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			log := logrus.New()
+			log := slogger.New()
 			kname := args[0]
 			err := kernels.RemoveKernel(context.Background(), log, dirName, kname, backupConf)
 			if err != nil {

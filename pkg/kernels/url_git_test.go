@@ -6,7 +6,6 @@ package kernels
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -15,7 +14,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +37,7 @@ func gitAddTestFile(r *git.Repository, gitDir, file string) error {
 	}
 
 	filename := filepath.Join(gitDir, file)
-	if err := ioutil.WriteFile(filename, []byte(file), 0644); err != nil {
+	if err := os.WriteFile(filename, []byte(file), 0644); err != nil {
 		return err
 	}
 	if _, err = w.Add(file); err != nil {
@@ -154,9 +153,9 @@ func modifyTestRepo(dir string) error {
 }
 
 func TestGitFetch(t *testing.T) {
-	log := logrus.New()
+	log := slogger.New()
 	if !testing.Verbose() {
-		log.SetOutput(ioutil.Discard)
+		log = slogger.NewDiscard()
 	}
 
 	gitRepoDir, err := makeTestGitRepo()

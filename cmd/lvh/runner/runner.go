@@ -13,7 +13,7 @@ import (
 
 	"github.com/cilium/little-vm-helper/pkg/images"
 	"github.com/cilium/little-vm-helper/pkg/runner"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ func RunCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
-			rcnf.Logger = logrus.New()
+			rcnf.Logger = slogger.New()
 
 			rcnf.ForwardedPorts, err = runner.ParsePortForward(ports)
 			if err != nil {

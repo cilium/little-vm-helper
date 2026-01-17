@@ -8,7 +8,7 @@ import (
 	"runtime"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ func configureCommand() *cobra.Command {
 		Short: "configure kernel",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			log := logrus.New()
+			log := slogger.New()
 			kd, err := kernels.LoadDir(dirName)
 			if err != nil {
 				log.Fatal(err)
@@ -51,7 +51,7 @@ func rawConfigureCommand() *cobra.Command {
 		Short: "configure a kernel prepared by means other than lvh",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
-			log := logrus.New()
+			log := slogger.New()
 			kd, err := kernels.LoadDir(dirName)
 			if err != nil {
 				log.Fatal(err)

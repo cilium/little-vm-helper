@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/cilium/little-vm-helper/pkg/kernels"
-	"github.com/sirupsen/logrus"
+	"github.com/cilium/little-vm-helper/pkg/slogger"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ func initCommand() *cobra.Command {
 		Use:   "init",
 		Short: "initialize a directory for the kernel builder",
 		Run: func(cmd *cobra.Command, _ []string) {
-			log := logrus.New()
+			log := slogger.New()
 			conf := &kernels.Conf{
 				Kernels:    make([]kernels.KernelConf, 0),
 				CommonOpts: make([]kernels.ConfigOption, 0),
