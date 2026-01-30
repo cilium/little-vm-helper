@@ -81,6 +81,10 @@ inputs:
     description: 'Kernel version (if empty, a kernel from the image will be used)'
     required: false
     default: ''
+  additional-disk-size:
+    description: 'Additional disk size to allocate to the VM (e.g. +10G)'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -192,6 +196,11 @@ runs:
         lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
+    - name: Resize VM image
+      if: ${{ inputs.provision == 'true' && inputs.additional-disk-size != '' }}
+      shell: bash
+      run: |
+        qemu-img resize "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2" "${{ inputs.additional-disk-size }}"
     - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
       id: cache-lvh-kernel
