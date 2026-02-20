@@ -202,7 +202,7 @@ github.com/go-logr/stdr
 # github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
 ## explicit; go 1.20
 github.com/golang/groupcache/lru
-# github.com/google/go-containerregistry v0.20.8
+# github.com/google/go-containerregistry v0.21.0
 ## explicit; go 1.25.6
 github.com/google/go-containerregistry/internal/and
 github.com/google/go-containerregistry/internal/compression
