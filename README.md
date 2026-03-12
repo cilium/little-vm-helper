@@ -17,6 +17,7 @@ For an example script, see [scripts/example.sh](scripts/example.sh).
 
 LVH can be used to:
  * build root images for VMs
+ * download images
  * build kernels
  * download kernels
  * boot VMs using above
@@ -78,6 +79,26 @@ space:
 $ ls -sh1 _data/images/*.img
 856M _data/images/base.img
 1.7G _data/images/k8s.img
+```
+
+### Download images
+
+Instead of building your own images, you can use lvh to download images built
+from our [cilium/little-vm-helper-images](https://github.com/cilium/little-vm-helper-images)
+repository. For that use the `lvh images pull` command.
+
+You can find a list of the various images built under
+https://quay.io/organization/lvh-images, see more information [the project
+README.md](https://github.com/cilium/little-vm-helper-images/blob/main/README.md)
+
+If you don't know which image to choose, the most complete image to date is the
+`kind` type. You can find the various tags for each kernel versions under
+https://quay.io/repository/lvh-images/kind?tab=tags.
+
+For example, pulling an image for testing the 5.15 kernel built by lvh image CI
+on 2026/01/06 would be:
+```bash
+lvh images pull quay.io/lvh-images/kind:5.15-20260106.135428
 ```
 
 ### Build kernels
