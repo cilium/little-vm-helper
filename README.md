@@ -218,6 +218,23 @@ go run ./cmd/lvh run --image _data/images/base.qcow2
 > `--kernel` lvh option flag from your host. See the above section
 > "[Download Kernels](#download-kernels)" on how to download kernels from these images.
 
+> [!TIP]
+> As booting images goal is often to test BPF program on various kernel
+> versions, here are some useful lvh options:
+> - `--port` to bind the VM ssh port to a custom port, letting you `ssh -p 2222
+>   root@localhost` to have a fully capable shell.
+> - `--host-mount` to mount your working directory, making applying changes and
+>   testing them quicker (be aware that it requires kernel modules to load
+>   correctly).
+> - `--cpu` and `--mem` to adjust the specs for the VM, making building and
+>   running inside the VM quicker.
+>
+> Overall, a typical command would look like this on x86_64 (for arm64, you
+> would need to add `--kernel` for booting):
+> ```bash
+> lvh run --image ~/_data/images/kind_5.15.qcow2 --port 2222:22 --host-mount ~/tetragon --cpu 4 --mem 8G
+> ```
+
 OCI images are also supported:
 ```bash
 go run ./cmd/lvh run --image quay.io/lvh-images/root-images:main
