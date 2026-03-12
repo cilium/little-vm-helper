@@ -212,21 +212,25 @@ Or, with the kernel installed in the image, using the image bootloader:
 go run ./cmd/lvh run --image _data/images/base.qcow2
 ```
 
-Note that if you are using [cilium/little-vm-helper-images](https://github.com/cilium/little-vm-helper-images),
-for now, only amd64 images contain a compatible bootloader. So even though
-kernels are present in the arm64 images, you'll need to supply it to QEMU
-through the `--kernel` option from your host. See the above section "[Download
-Kernels](#download-kernels)" on how to download kernels from these images.
+> [!IMPORTANT]
+> Only amd64 images contain a compatible bootloader. So even though kernels are
+> present in the arm64 images, you'll need to supply it to QEMU through the
+> `--kernel` lvh option flag from your host. See the above section
+> "[Download Kernels](#download-kernels)" on how to download kernels from these images.
 
 OCI images are also supported:
 ```bash
 go run ./cmd/lvh run --image quay.io/lvh-images/root-images:main
 ```
 
-**Note**: Building images and kernels is only supported on Linux. On the other hand, images and kernels already build on Linux can be booted in MacOS (both x86 and Arm). The only requirement is ```qemu-system-x86_64```. As MacOS does not support KVM, the commands to boot images are:
-```bash
-go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
-```
+> [!NOTE]
+> Building images and kernels is only supported on Linux. On the other hand,
+> images and kernels already build on Linux can be booted in macOS (both x86
+> and arm64). The only requirement is `qemu-system-x86_64`. As macOS does not
+> support KVM, the commands to boot images are:
+> ```bash
+> go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
+> ```
 
 ## FAQ
 
