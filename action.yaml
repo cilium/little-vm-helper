@@ -135,7 +135,7 @@ runs:
         sudo mv /tmp/lvh /bin/lvh
     - name: Load install packages from GitHub cache
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
-      uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
@@ -179,7 +179,7 @@ runs:
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
-    - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+    - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       if: ${{ inputs.provision == 'true' }}
       id: cache-lvh-image
       with:
@@ -201,7 +201,7 @@ runs:
       shell: bash
       run: |
         qemu-img resize "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2" "${{ inputs.additional-disk-size }}"
-    - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+    - uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
       id: cache-lvh-kernel
       with:
