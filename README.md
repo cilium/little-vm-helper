@@ -36,7 +36,7 @@ The first command will create a configuration file:
 jq . < _data/images.json
 [
   {
-    "name": "base",
+    "name": "base.img",
     "packages": [
       "less",
       "vim",
@@ -55,9 +55,8 @@ jq . < _data/images.json
     ]
   },
   {
-    "name": "k8s",
-    "parent": "base",
-    "image_size": "20G",
+    "name": "k8s.qcow2",
+    "parent": "base.img",
     "packages": [
       "docker.io"
     ]
@@ -76,9 +75,9 @@ be present in the images directory. ote that the images are stored as sparse fil
 space:
 
 ```bash
-$ ls -sh1 _data/images/*.img
+$ ls -lh _data/images/
 856M _data/images/base.img
-1.7G _data/images/k8s.img
+1.7G _data/images/k8s.qcow2
 ```
 
 ### Download images
@@ -115,7 +114,7 @@ Please note, to cross-build for a different architecture, you can use the
 
 The configuration file keeps the url for a kernel, together with its configuration options:
 ```jsonc
-$ jq . < _data/kernel.json
+$ jq . < _data/kernels.json
 {
   "kernels": [
     {
@@ -204,12 +203,12 @@ You can use the `run` subcommand to start images.
 
 For example:
 ```bash
-go run ./cmd/lvh run --image _data/images/base.qcow2 --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
+go run ./cmd/lvh run --image _data/images/base.img --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
 ```
 
 Or, with the kernel installed in the image, using the image bootloader:
 ```bash
-go run ./cmd/lvh run --image _data/images/base.qcow2
+go run ./cmd/lvh run --image _data/images/base.img
 ```
 
 > [!IMPORTANT]
@@ -246,7 +245,7 @@ go run ./cmd/lvh run --image quay.io/lvh-images/root-images:main
 > and arm64). The only requirement is `qemu-system-x86_64`. As macOS does not
 > support KVM, the commands to boot images are:
 > ```bash
-> go run ./cmd/lvh run --image _data/images/base.qcow2 --qemu-disable-kvm
+> go run ./cmd/lvh run --image _data/images/base.img --qemu-disable-kvm
 > ```
 
 ## FAQ
