@@ -67,11 +67,11 @@ jq . < _data/images.json
 The configuration file includes:
  * a set of packages for the image
  * an optional parent image
- * a set of actions to be performed after the installation of the packets. There are multiple
+ * a set of actions to be performed after the installation of the packages. There are multiple
    actions supported, see [pkg/images/actions.go](pkg/images/actions.go).
 
-Once the `build-images` command completes, the two images described in the configuration file will
-be present in the images directory. ote that the images are stored as sparse files so they take less
+Once the `images build` command completes, the two images described in the configuration file will
+be present in the images directory. Note that the images are stored as sparse files so they take less
 space:
 
 ```bash
@@ -253,7 +253,7 @@ go run ./cmd/lvh run --image quay.io/lvh-images/root-images:main
 ### Why not use packer to build images?
 
 Existing packer builders
-(e.g,.https://github.com/cilium/packer-ci-build/blob/710ad61e7d5b0b6872770729a30bcdade2ee1acb/cilium-ubuntu.json#L19,
+(e.g., https://github.com/cilium/packer-ci-build/blob/710ad61e7d5b0b6872770729a30bcdade2ee1acb/cilium-ubuntu.json#L19,
 https://www.packer.io/plugins/builders/qemu) are meant to manage VMs with
 longer lifetimes than a single use, and use facilities that introduce unnecessary overhead for our use-case.
 
@@ -267,7 +267,7 @@ That being said, if we need packer functionality we can create a packer plugin
 
 ### Why not use vagrant (or libvirt-based tools)?
 
-These tools also target production VMs with lifetime streching beyond a single
+These tools also target production VMs with lifetime stretching beyond a single
 use. As a result, they introduce overhead in booting time, provisioning time,
 and storage.
 
@@ -294,7 +294,7 @@ On debian distribution, here is a list of packages needed for LVH to work.
         - [x]  is that possible? libguestfs needs to boot a mini-VM
  - [x] kernels: add support for building kernels
  - [x] runner: qemu runner wrapper
- - [x] images bootable VMs: running qemu with --kernel is convinient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
+ - [x] images bootable VMs: running qemu with --kernel is convenient for development. If we want to store images externally (e.g., AWS), it might make sense to support bootable VMs.
  - [ ] improve boot time: minimal init, use qemu microvm (https://qemu.readthedocs.io/en/latest/system/i386/microvm.html, https://mergeboard.com/blog/2-qemu-microvm-docker/)
  - [ ] images: on a failed run, save everything in a image-failed-$(date) directory
  - [ ] use `guestfish --listen` (see
