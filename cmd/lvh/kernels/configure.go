@@ -69,7 +69,7 @@ func rawConfigureCommand() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().String(archFlag, "", archHelp)
+	cmd.Flags().String(archFlag, runtime.GOARCH, archHelp)
 	cmd.Flags().StringVar(&dirName, dirNameCommand, "", dirNameHelp)
 	cmd.MarkFlagRequired(dirNameCommand)
 
