@@ -88,6 +88,25 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Remove slow Azure apt mirrors
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      shell: bash
+      run: |
+        # The default 'azure.archive.ubuntu.com' mirrors can be really slow.
+        # Prioritize the official Ubuntu mirrors.
+        #
+        # The normal apt-mirrors.txt will look like:
+        #
+        # http://azure.archive.ubuntu.com/ubuntu/       priority:1
+        # https://archive.ubuntu.com/ubuntu/    priority:2
+        # https://security.ubuntu.com/ubuntu/   priority:3
+        #
+        # Just delete the 'azure.archive.ubuntu.com' line.
+        if [ -f /etc/apt/apt-mirrors.txt ]; then
+          sudo sed -i '/azure.archive.ubuntu.com/d' /etc/apt/apt-mirrors.txt
+          echo "Using mirrors:"
+          cat /etc/apt/apt-mirrors.txt
+        fi
     - name: Find LVH cli
       if: ${{ inputs.provision == 'true' }}
       id: find-lvh-cli
