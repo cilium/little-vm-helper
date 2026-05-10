@@ -68,7 +68,7 @@ func BuildCmd() *cobra.Command {
 			if err != nil {
 				log.WithError(err).Error("building images failed")
 			} else {
-				log.WithField("time-elapsed", elapsed).Info("images built succesfully")
+				log.WithField("time-elapsed", elapsed).Info("images built successfully")
 			}
 
 			for img, ir := range res.ImageResults {
