@@ -147,6 +147,15 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
       shell: bash
       run: |
+        success=0
+        for n in {1..5}; do
+          if docker pull quay.io/lvh-images/lvh:${{ inputs.lvh-version }}; then
+            success=1
+            break;
+          fi
+          sleep $((n+1))
+        done
+        [ $success -eq 1 ] || exit 42
         cid=$(docker create quay.io/lvh-images/lvh:${{ inputs.lvh-version }})
         docker cp $cid:/usr/bin/lvh /tmp/lvh
         docker rm $cid
