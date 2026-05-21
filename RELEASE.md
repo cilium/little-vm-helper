@@ -36,4 +36,12 @@ Set the commit you want to tag. Usually this is the most recent commit on `main`
 
 Then tag and push the release:
 
-    git tag -a $RELEASE -m "$RELEASE release" $COMMIT_SHA && git push origin $RELEASE
+    git tag -s -a $RELEASE -m "$RELEASE release" $COMMIT_SHA && git push origin $RELEASE
+
+# Publish a release
+
+Browse to [Draft a new release], and select the tag you have just created.
+
+Click `Generate release notes`, check the notes for errors, and then click publish.
+
+[Draft a new release]: https://github.com/cilium/little-vm-helper/releases/new
