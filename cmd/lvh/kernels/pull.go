@@ -149,14 +149,20 @@ func ExtractTarPath(tarFile string, path string, targetDir string) error {
 				return fmt.Errorf("failed to create directory %s: %w", dstPath, err)
 			}
 		case tar.TypeReg:
+			if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+				return fmt.Errorf("failed to create parent directory for %s: %w", dstPath, err)
+			}
 			dstFile, err := os.Create(dstPath)
 			if err != nil {
 				return fmt.Errorf("failed to open %s: %w", dstPath, err)
 			}
-			defer dstFile.Close()
 			n, err := io.CopyN(dstFile, tarReader, header.Size)
+			closeErr := dstFile.Close()
 			if err != nil {
 				return fmt.Errorf("failed to copy %s from tar %s: %w", dstPath, tarFile, err)
+			}
+			if closeErr != nil {
+				return fmt.Errorf("failed to close %s: %w", dstPath, closeErr)
 			}
 			if n != header.Size {
 				return fmt.Errorf("tar header reports file %s size %d, but only %d bytes were pulled", header.Name, header.Size, n)
