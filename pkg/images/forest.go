@@ -41,6 +41,33 @@ func NewImageForest(conf *ImagesConf, saveConfFile bool) (*ImageForest, error) {
 		}
 	}
 
+	visited := make(map[string]uint8, len(confs))
+	var visitParent func(string) error
+	visitParent = func(image string) error {
+		switch visited[image] {
+		case 1:
+			return fmt.Errorf("cyclic image parent relationship involving %q", image)
+		case 2:
+			return nil
+		}
+
+		visited[image] = 1
+		if parent, ok := parent[image]; ok {
+			if _, ok := confs[parent]; ok {
+				if err := visitParent(parent); err != nil {
+					return err
+				}
+			}
+		}
+		visited[image] = 2
+		return nil
+	}
+	for image := range confs {
+		if err := visitParent(image); err != nil {
+			return nil, err
+		}
+	}
+
 	// using the parent map, form the children map
 	children := make(map[string][]string)
 	for child, parent := range parent {
