@@ -6,7 +6,7 @@ go 1.25.7
 require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/go-git/go-git/v5 v5.19.2
-	github.com/google/go-containerregistry v0.21.8
+	github.com/google/go-containerregistry v0.21.9
 	github.com/moby/term v0.5.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
