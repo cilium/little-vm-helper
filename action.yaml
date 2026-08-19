@@ -191,8 +191,9 @@ runs:
       run: |
         # Disable auto update of man-db for every package
         sudo rm -f /var/lib/man-db/auto-update
-        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
-        sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
+        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/ || true
+        sudo apt-get update
+        sudo apt-get -y --no-install-recommends install ${{steps.find-lvh-cli.outputs.dependency_list}}
         sudo kvm-ok
     - name: Derive VM image file name
       if: ${{ inputs.provision == 'true' }}
