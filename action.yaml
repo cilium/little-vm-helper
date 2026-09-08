@@ -88,22 +88,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Remove slow Azure apt mirrors
+    - name: Bound a stalled apt mirror
+      if: ${{ inputs.provision == 'true' }}
+      shell: bash
+      run: |
+        # apt fails over on error, never on slowness, so a stall needs a deadline.
+        echo 'Acquire::http::Timeout "20";' | sudo tee /etc/apt/apt.conf.d/99lvh-mirror-timeout
+    - name: Deprioritize slow Azure apt mirrors
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
       run: |
-        # The default 'azure.archive.ubuntu.com' mirrors can be really slow.
-        # Prioritize the official Ubuntu mirrors.
-        #
-        # The normal apt-mirrors.txt will look like:
-        #
-        # http://azure.archive.ubuntu.com/ubuntu/       priority:1
-        # https://archive.ubuntu.com/ubuntu/    priority:2
-        # https://security.ubuntu.com/ubuntu/   priority:3
-        #
-        # Just delete the 'azure.archive.ubuntu.com' line.
+        # Try the official Ubuntu mirrors first, keeping Azure as a last resort.
         if [ -f /etc/apt/apt-mirrors.txt ]; then
-          sudo sed -i '/azure.archive.ubuntu.com/d' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure\.archive\.ubuntu\.com/s/priority:[0-9]*/priority:4/' /etc/apt/apt-mirrors.txt
           echo "Using mirrors:"
           cat /etc/apt/apt-mirrors.txt
         fi
