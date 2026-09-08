@@ -1,7 +1,7 @@
 module github.com/cilium/little-vm-helper
 
 // Keep at .0 to avoid imposing upgrades on developers
-go 1.25.7
+go 1.26.0
 
 require (
 	github.com/docker/docker v28.5.2+incompatible
@@ -10,8 +10,8 @@ require (
 	github.com/moby/term v0.5.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/mod v0.40.0
-	golang.org/x/sys v0.47.0
+	golang.org/x/mod v0.41.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
