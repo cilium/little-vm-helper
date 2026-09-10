@@ -225,6 +225,10 @@ go run ./cmd/lvh run --image _data/images/base.img
 > - `--host-mount` to mount your working directory, making applying changes and
 >   testing them quicker (be aware that it requires kernel modules to load
 >   correctly).
+> - `--kernel-modules` to expose a directory of kernel modules matching a
+>   custom `--kernel` under the `kernel_modules` 9p tag, so you don't have to
+>   rebuild the VM image. Mount it inside the guest, e.g. `mount -t 9p -o
+>   trans=virtio,version=9p2000.L kernel_modules /lib/modules/$(uname -r)`.
 > - `--cpu` and `--mem` to adjust the specs for the VM, making building and
 >   running inside the VM quicker.
 >
