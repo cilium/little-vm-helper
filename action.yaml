@@ -93,7 +93,12 @@ runs:
       shell: bash
       run: |
         # apt fails over on error, never on slowness, so a stall needs a deadline.
-        echo 'Acquire::http::Timeout "20";' | sudo tee /etc/apt/apt.conf.d/99lvh-mirror-timeout
+        sudo tee /etc/apt/apt.conf.d/99lvh-mirror-timeout > /dev/null <<'EOF'
+        Acquire::http::Timeout "20";
+        Acquire::https::Timeout "20";
+        Acquire::Retries "3";
+        EOF
+        apt-config dump | grep -E 'Acquire::(http|https)::Timeout|Acquire::Retries'
     - name: Deprioritize slow Azure apt mirrors
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
       shell: bash
@@ -125,16 +130,25 @@ runs:
           exit 1
         fi
         echo "dependency_list=${dependencies}" >> $GITHUB_OUTPUT
-
+    - name: Compute the package cache key
+      # Only the package cache reads this, and that step is gated the same way.
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      id: package-cache-key
+      shell: bash
+      run: |
+        # The key is advisory, so a stalled or erroring mirror has to degrade it
+        # rather than fail the caller's job: bound the refresh and fall back to
+        # the index the runner image already ships.
+        sudo timeout -k 5 30 apt-get update \
+          || echo "::warning::apt-get update failed, keying the package cache off the runner image index"
         deps_w_versions=""
-        sudo apt update
-        for dep in ${dependencies}
+        for dep in ${{ steps.find-lvh-cli.outputs.dependency_list }}
         do
           # Simulate package install to fetch package version;
           # head -n1 in case there are multiple packages being installed (eg: for qemu-system);
           # Output line similar to:
           # Inst virtinst (1:4.1.0-3ubuntu0.1 Ubuntu:24.04/noble-updates [all])
-          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2-)
+          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2- || true)
           deps_w_versions="${dep}_${version} ${deps_w_versions}"
         done
         # Remove ending "-" character added by md5sum
@@ -164,7 +178,7 @@ runs:
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
-        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
+        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.package-cache-key.outputs.dependency_list_sha }}
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
       shell: bash
