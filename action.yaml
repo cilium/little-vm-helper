@@ -27,6 +27,7 @@ inputs:
   cmd:
     description: 'Commands to run in a VM (any occurance of "$" within "cmd" must be escaped)'
     required: true
+    default: ''
   ssh-port:
     description: 'SSH port for VM on a host'
     required: true
@@ -48,6 +49,14 @@ inputs:
     default: 'true'
   install-dependencies:
     description: 'Install QEMU dependencies (Debian/Ubuntu)'
+    default: 'false'
+  dependency-list-sha:
+    description: 'Package cache key derived elsewhere. Set it to skip the apt refresh that derives it here.'
+    required: false
+    default: ''
+  derive-dependency-list-sha:
+    description: 'Derive the package cache key, expose it as the dependency_list_sha output and do nothing else. It overrides provision, so run it in one job per run and hand its output back to the matrix as dependency-list-sha.'
+    required: false
     default: 'false'
   serial-port:
     description: 'Serial port to access VM'
@@ -85,30 +94,36 @@ inputs:
     description: 'Additional disk size to allocate to the VM (e.g. +10G)'
     required: false
     default: ''
+outputs:
+  dependency_list_sha:
+    description: "Package cache key, when derive-dependency-list-sha is set. Hand it back to the matrix as dependency-list-sha."
+    value: ${{ steps.package-cache-key.outputs.dependency_list_sha }}
 runs:
   using: "composite"
   steps:
-    - name: Remove slow Azure apt mirrors
-      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+    - name: Bound a stalled apt mirror
+      if: ${{ (inputs.provision == 'true' && inputs.install-dependencies == 'true') || inputs.derive-dependency-list-sha == 'true' }}
       shell: bash
       run: |
-        # The default 'azure.archive.ubuntu.com' mirrors can be really slow.
-        # Prioritize the official Ubuntu mirrors.
-        #
-        # The normal apt-mirrors.txt will look like:
-        #
-        # http://azure.archive.ubuntu.com/ubuntu/       priority:1
-        # https://archive.ubuntu.com/ubuntu/    priority:2
-        # https://security.ubuntu.com/ubuntu/   priority:3
-        #
-        # Just delete the 'azure.archive.ubuntu.com' line.
+        # apt fails over on error, never on slowness, so a stall needs a deadline.
+        sudo tee /etc/apt/apt.conf.d/99lvh-mirror-timeout > /dev/null <<'EOF'
+        Acquire::http::Timeout "20";
+        Acquire::https::Timeout "20";
+        Acquire::Retries "3";
+        EOF
+        apt-config dump | grep -E 'Acquire::(http|https)::Timeout|Acquire::Retries'
+    - name: Deprioritize slow Azure apt mirrors
+      if: ${{ (inputs.provision == 'true' && inputs.install-dependencies == 'true') || inputs.derive-dependency-list-sha == 'true' }}
+      shell: bash
+      run: |
+        # Try the official Ubuntu mirrors first, keeping Azure as a last resort.
         if [ -f /etc/apt/apt-mirrors.txt ]; then
-          sudo sed -i '/azure.archive.ubuntu.com/d' /etc/apt/apt-mirrors.txt
+          sudo sed -i '/azure\.archive\.ubuntu\.com/s/priority:[0-9]*/priority:4/' /etc/apt/apt-mirrors.txt
           echo "Using mirrors:"
           cat /etc/apt/apt-mirrors.txt
         fi
     - name: Find LVH cli
-      if: ${{ inputs.provision == 'true' }}
+      if: ${{ inputs.provision == 'true' || inputs.derive-dependency-list-sha == 'true' }}
       id: find-lvh-cli
       shell: bash
       run: |
@@ -128,23 +143,32 @@ runs:
           exit 1
         fi
         echo "dependency_list=${dependencies}" >> $GITHUB_OUTPUT
-
+    - name: Compute the package cache key
+      # Only the package cache reads this, and that step is gated the same way.
+      if: ${{ (inputs.provision == 'true' && inputs.install-dependencies == 'true' && inputs.dependency-list-sha == '') || inputs.derive-dependency-list-sha == 'true' }}
+      id: package-cache-key
+      shell: bash
+      run: |
+        # The key is advisory, so a stalled or erroring mirror has to degrade it
+        # rather than fail the caller's job: bound the refresh and fall back to
+        # the index the runner image already ships.
+        sudo timeout -k 5 30 apt-get update \
+          || echo "::warning::apt-get update failed, keying the package cache off the runner image index"
         deps_w_versions=""
-        sudo apt update
-        for dep in ${dependencies}
+        for dep in ${{ steps.find-lvh-cli.outputs.dependency_list }}
         do
           # Simulate package install to fetch package version;
           # head -n1 in case there are multiple packages being installed (eg: for qemu-system);
           # Output line similar to:
           # Inst virtinst (1:4.1.0-3ubuntu0.1 Ubuntu:24.04/noble-updates [all])
-          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2-)
+          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2- || true)
           deps_w_versions="${dep}_${version} ${deps_w_versions}"
         done
         # Remove ending "-" character added by md5sum
         dependencies_sha=$(echo ${deps_w_versions} | md5sum | cut -d' ' -f1)
         echo "dependency_list_sha=${dependencies_sha}" >> $GITHUB_OUTPUT
     - name: Install LVH cli
-      if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' }}
+      if: ${{ inputs.provision == 'true' && steps.find-lvh-cli.outputs.skip != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         success=0
@@ -162,14 +186,14 @@ runs:
         chmod +x /tmp/lvh
         sudo mv /tmp/lvh /bin/lvh
     - name: Load install packages from GitHub cache
-      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
-        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.find-lvh-cli.outputs.dependency_list_sha }}
+        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ inputs.dependency-list-sha || steps.package-cache-key.outputs.dependency_list_sha }}
     - name: Download LVH dependencies
-      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         n=0
@@ -186,7 +210,7 @@ runs:
         sudo mkdir -p /tmp/.ubuntu-pkgs
         sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
     - name: Install dependencies
-      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         # Disable auto update of man-db for every package
@@ -195,11 +219,12 @@ runs:
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
     - name: Derive VM image file name
-      if: ${{ inputs.provision == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       id: derive-image-name
       shell: bash
       run: echo "image-name=$(echo ${{ inputs.image }} | sed 's/\-ci//g')_$(echo ${{ inputs.image-version }} | sed 's/^\(.*\)\-[0-9.]*\(\-[^-]*\)*\(@sha256:.*\)*$/\1/g')" >> $GITHUB_OUTPUT
     - name: Create dirs for image and kernel
+      if: ${{ inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         # chmod dirs so that the cache hits can decompress the artifacts
@@ -208,46 +233,47 @@ runs:
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: ${{ inputs.provision == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       id: cache-lvh-image
       with:
         path: ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
         key: lvh-image-${{ inputs.image }}_${{ inputs.image-version }}_${{ inputs.arch }}
     - name: Decompressed cached VM image
-      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' }}
+      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: zstd -df ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
     - name: Fetch VM image
-      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
     - name: Resize VM image
-      if: ${{ inputs.provision == 'true' && inputs.additional-disk-size != '' }}
+      if: ${{ inputs.provision == 'true' && inputs.additional-disk-size != '' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         qemu-img resize "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2" "${{ inputs.additional-disk-size }}"
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' }}
+      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && inputs.derive-dependency-list-sha != 'true' }}
       id: cache-lvh-kernel
       with:
         path: ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}
         key: lvh-kernel-${{ inputs.kernel-version }}_${{ inputs.arch }}
     - name: Fetch kernel
       id: fetch-kernel
-      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && steps.cache-lvh-kernel.outputs.cache-hit != 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && steps.cache-lvh-kernel.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         lvh kernel pull --platform=linux/${{ inputs.arch }} --dir "${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}" ${{ inputs.kernel-version }}
     - name: Set kernel path
+      if: ${{ inputs.derive-dependency-list-sha != 'true' }}
       id: kernel-path
       shell: bash
       run: |
         echo lvh_kernel_path=$(find ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}/boot/ -name "vmlinuz-*" -type f | head -1) >> "$GITHUB_OUTPUT"
     - name: Start VM
-      if: ${{ inputs.provision == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         extraArgs=()
@@ -290,7 +316,7 @@ runs:
             --qemu-arch ${{ inputs.arch }} \
             ${extraArgs[@]}
     - name: Wait for VM's SSH Server
-      if: ${{ inputs.provision == 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         n=0
@@ -308,6 +334,7 @@ runs:
           exit 42
         fi
     - name: Run test cmd in VM
+      if: ${{ inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
         ssh -p ${{ inputs.ssh-port }} -o "StrictHostKeyChecking=no" root@localhost << EOF
