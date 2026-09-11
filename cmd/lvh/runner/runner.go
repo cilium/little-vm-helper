@@ -27,8 +27,29 @@ var (
 
 func RunCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:          "run",
-		Short:        "run/start VMs based on generated base images and kernels",
+		Use:   "run",
+		Short: "Run VMs based on generated base images and kernels",
+		Long: `Run VMs based on generated base images and kernels. This is essentially a
+convenience wrapper around qemu.
+
+Examples:
+  # Run a VM based your base image
+  lvh run --image _data/images/base.img
+
+  # Run a VM based on an image and a kernel
+  lvh run --image _data/images/base.img --kernel _data/kernels/bpf-next/arch/x86_64/boot/bzImage
+
+  # Run a VM based on kind 5.15 local image, expose SSH on port 2222, mount the
+  # tetragon folder and specify cpu and memory.
+  lvh run --image ~/_data/images/kind_5.15.qcow2 --port 2222:22 --host-mount ~/tetragon --cpu 4 --mem 8G
+
+  # OCI images are also supported
+  lvh run --image quay.io/lvh-images/root-images:main
+
+Note that only amd64 images contain a compatible bootloader. So even though
+kernels are present in the arm64 images, you'll need to supply it to QEMU
+through the --kernel lvh option flag from your host. See the kernel subcommand
+to download kernels from these images.`,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
