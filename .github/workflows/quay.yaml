@@ -8,6 +8,16 @@ on:
 jobs:
   quay:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      # Required by the Quay OIDC token exchange.
+      id-token: write
+    # Pins the OIDC token subject to
+    # repo:cilium/little-vm-helper:environment:release, which is the identity
+    # federated with the Quay robot account.
+    environment:
+      name: release
+      deployment: false
     steps:
     - name: Checkout code
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,11 +33,42 @@ jobs:
       env:
         KO_DOCKER_REPO: quay.io/lvh-images/lvh
 
+    # Quay's registry endpoint only accepts credentials or a JWT signed by
+    # Quay itself, so the GitHub OIDC token cannot be used as the registry
+    # password directly. Trade it for a short lived robot token first.
+    #
+    # Because the job references an environment, the subject of the token is
+    # repo:cilium@21054566/little-vm-helper@508961088:environment:release, the
+    # immutable form that carries the owner and repository ids. That is the
+    # identity federated with the robot account on the Quay side, so renaming
+    # the environment breaks the login.
+    - name: Get a quay.io robot token via OIDC
+      id: registry-token
+      env:
+        ROBOT: ${{ vars.QUAY_ROBOT_RELEASE }}
+      run: |
+        oidc_token="$(curl -sSf --retry 3 --retry-all-errors \
+          -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=quay.io" \
+          | jq -er '.value')"
+        echo "::add-mask::${oidc_token}"
+
+        # Pass the credentials on stdin so that the OIDC token is not visible
+        # in the process list of the runner.
+        robot_token="$(printf 'user = "%s:%s"\n' "${ROBOT}" "${oidc_token}" \
+          | curl -sSf --retry 3 --retry-all-errors -K - \
+            "https://quay.io/oauth2/federation/robot/token" \
+          | jq -er '.token')"
+        echo "::add-mask::${robot_token}"
+
+        echo "token=${robot_token}" >> "$GITHUB_OUTPUT"
+
     - env:
-        quay_token: ${{ secrets.QUAY_ROBOT_TOKEN }}
+        ROBOT: ${{ vars.QUAY_ROBOT_RELEASE }}
+        quay_token: ${{ steps.registry-token.outputs.token }}
       run: |
         echo "${quay_token}" | ko login quay.io \
-          --username "lvh-images+gh" --password-stdin
+          --username "${ROBOT}" --password-stdin
 
         ko build --sbom=none --bare --platform=linux/amd64,linux/arm64 \
           --tags=latest,$(git describe --tag --always --dirty) ./cmd/lvh
