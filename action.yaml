@@ -94,6 +94,10 @@ inputs:
     description: 'Additional disk size to allocate to the VM (e.g. +10G)'
     required: false
     default: ''
+  cache-artifacts:
+    description: 'Cache the VM image and kernel in the GitHub Actions cache (set to false to always pull them)'
+    required: false
+    default: 'true'
 outputs:
   dependency_list_sha:
     description: "Package cache key, when derive-dependency-list-sha is set. Hand it back to the matrix as dependency-list-sha."
@@ -233,7 +237,7 @@ runs:
         sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.cache-artifacts == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       id: cache-lvh-image
       with:
         path: ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2.zst
@@ -246,7 +250,7 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
-        lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
+        lvh images pull --platform linux/${{ inputs.arch}} ${{ inputs.cache-artifacts == 'true' && '--cache' || '' }} ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
     - name: Resize VM image
@@ -255,7 +259,7 @@ runs:
       run: |
         qemu-img resize "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images/${{ steps.derive-image-name.outputs.image-name }}.qcow2" "${{ inputs.additional-disk-size }}"
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-      if: ${{ inputs.provision == 'true' && inputs.kernel-version != '' && inputs.derive-dependency-list-sha != 'true' }}
+      if: ${{ inputs.provision == 'true' && inputs.cache-artifacts == 'true' && inputs.kernel-version != '' && inputs.derive-dependency-list-sha != 'true' }}
       id: cache-lvh-kernel
       with:
         path: ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/${{ inputs.kernel-version }}
