@@ -39,6 +39,26 @@ func TestImageBuilderConfs(t *testing.T) {
 		},
 		{
 			confs: []ImgConf{
+				{Name: "image1", Parent: "image2"},
+				{Name: "image2", Parent: "image1"},
+			},
+			test: func(f *ImageForest, err error) {
+				assert.Nil(t, f)
+				assert.ErrorContains(t, err, "cyclic image parent relationship")
+			},
+		},
+		{
+			confs: []ImgConf{
+				{Name: "image", Parent: "external-base"},
+			},
+			test: func(f *ImageForest, err error) {
+				assert.NotNil(t, f)
+				assert.Nil(t, err)
+				assert.Equal(t, []string{"image"}, f.RootImages())
+			},
+		},
+		{
+			confs: []ImgConf{
 				{Name: "base"},
 				{Name: "image1", Parent: "base"},
 				{Name: "image2", Parent: "image1"},
