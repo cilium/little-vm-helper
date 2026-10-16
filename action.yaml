@@ -111,7 +111,7 @@ runs:
         Acquire::https::Timeout "20";
         Acquire::Retries "3";
         EOF
-        apt-config dump | grep -E 'Acquire::(http|https)::Timeout|Acquire::Retries'
+        sudo apt-config dump | grep -E 'Acquire::(http|https)::Timeout|Acquire::Retries'
     - name: Deprioritize slow Azure apt mirrors
       if: ${{ (inputs.provision == 'true' && inputs.install-dependencies == 'true') || inputs.derive-dependency-list-sha == 'true' }}
       shell: bash
@@ -120,7 +120,7 @@ runs:
         if [ -f /etc/apt/apt-mirrors.txt ]; then
           sudo sed -i '/azure\.archive\.ubuntu\.com/s/priority:[0-9]*/priority:4/' /etc/apt/apt-mirrors.txt
           echo "Using mirrors:"
-          cat /etc/apt/apt-mirrors.txt
+          sudo cat /etc/apt/apt-mirrors.txt
         fi
     - name: Find LVH cli
       if: ${{ inputs.provision == 'true' || inputs.derive-dependency-list-sha == 'true' }}
@@ -161,7 +161,7 @@ runs:
           # head -n1 in case there are multiple packages being installed (eg: for qemu-system);
           # Output line similar to:
           # Inst virtinst (1:4.1.0-3ubuntu0.1 Ubuntu:24.04/noble-updates [all])
-          version=$(apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2- || true)
+          version=$(sudo apt-get -s install $dep | grep "Inst $dep"  | head -n1 | awk -F" " '{ printf $3 }' | cut -c2- || true)
           deps_w_versions="${dep}_${version} ${deps_w_versions}"
         done
         # Remove ending "-" character added by md5sum
@@ -207,8 +207,9 @@ runs:
           sleep 1
         done
         [ $success -eq 1 ] || exit 42
-        sudo mkdir -p /tmp/.ubuntu-pkgs
+        mkdir -p /tmp/.ubuntu-pkgs
         sudo cp /var/cache/apt/archives/*.deb /tmp/.ubuntu-pkgs
+        sudo chown -R "$(id -u):$(id -g)" /tmp/.ubuntu-pkgs
     - name: Install dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
@@ -228,10 +229,14 @@ runs:
       shell: bash
       run: |
         # chmod dirs so that the cache hits can decompress the artifacts
-        sudo mkdir -p ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
+        # Force a umask so that any missing parent dirs stay traversable by the
+        # runner user, even on hosts with a restrictive default umask.
+        sudo sh -c 'umask 022 && mkdir -p "$1"' _ ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/kernels/${{ inputs.arch }}/
-        sudo mkdir -p ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
+        sudo sh -c 'umask 022 && mkdir -p "$1"' _ ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
         sudo chmod -R 777 ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/images
+        # lvh images/kernel pull runs as the runner user.
+        sudo chown -R "$(id -u):$(id -g)" ${{ inputs.images-folder-parent }}/kernels ${{ inputs.images-folder-parent }}/images
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
       id: cache-lvh-image
@@ -330,7 +335,7 @@ runs:
           sleep ${{ inputs.ssh-connect-wait-timeout }}
         done
         if [ $success -eq 0 ]; then
-          cat /tmp/console.log
+          sudo cat /tmp/console.log
           exit 42
         fi
     - name: Run test cmd in VM
