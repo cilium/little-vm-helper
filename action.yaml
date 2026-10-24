@@ -132,6 +132,9 @@ runs:
         fi
         runner_os_id=$(grep VERSION_ID /etc/os-release | cut -d= -f 2 | sed 's/"//g')
         echo "runner_os_id=${runner_os_id}" >> $GITHUB_OUTPUT
+        # Packages cached on one runner image can depend on library versions
+        # another image doesn't have, so don't share the cache across images.
+        echo "runner_image_version=${ImageVersion:-unknown}" >> $GITHUB_OUTPUT
 
         dependencies="qemu-system cpu-checker libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager"
         if [[ "${{ inputs.arch }}" == "amd64" ]]; then
@@ -191,7 +194,7 @@ runs:
       id: package-cache
       with:
         path: /tmp/.ubuntu-pkgs
-        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ inputs.dependency-list-sha || steps.package-cache-key.outputs.dependency_list_sha }}
+        key: lvh-pkgs-${{ runner.os }}-${{ steps.find-lvh-cli.outputs.runner_os_id }}-${{ steps.find-lvh-cli.outputs.runner_image_version }}-${{ inputs.dependency-list-sha || steps.package-cache-key.outputs.dependency_list_sha }}
     - name: Download LVH dependencies
       if: ${{ inputs.provision == 'true' && inputs.install-dependencies == 'true' && steps.package-cache.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
@@ -216,6 +219,7 @@ runs:
         # Disable auto update of man-db for every package
         sudo rm -f /var/lib/man-db/auto-update
         sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
+        sudo apt-get update
         sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
         sudo kvm-ok
     - name: Derive VM image file name
