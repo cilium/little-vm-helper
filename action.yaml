@@ -218,9 +218,13 @@ runs:
       run: |
         # Disable auto update of man-db for every package
         sudo rm -f /var/lib/man-db/auto-update
-        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
-        sudo apt-get update
-        sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
+        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/casche/apt/archives/
+        # try to install from local .deb packages first in case there is a cache hit.
+        # if it fails, fall back to running apt-get update
+        if ! sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb; then
+          sudo timeout -k 5 30 apt-get update || echo "::warning::apt-get update failed, retrying the install against the runner image index"
+          sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb
+        fi
         sudo kvm-ok
     - name: Derive VM image file name
       if: ${{ inputs.provision == 'true' && inputs.derive-dependency-list-sha != 'true' }}
