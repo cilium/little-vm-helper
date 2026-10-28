@@ -218,7 +218,7 @@ runs:
       run: |
         # Disable auto update of man-db for every package
         sudo rm -f /var/lib/man-db/auto-update
-        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/casche/apt/archives/
+        sudo cp /tmp/.ubuntu-pkgs/*.deb /var/cache/apt/archives/
         # try to install from local .deb packages first in case there is a cache hit.
         # if it fails, fall back to running apt-get update
         if ! sudo apt-get -y --no-install-recommends install /tmp/.ubuntu-pkgs/*.deb; then
