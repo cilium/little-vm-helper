@@ -129,6 +129,13 @@ func BuildQemuArgs(log slogger.Logger, rcnf *RunConf) ([]string, error) {
 		)
 	}
 
+	if len(rcnf.KernelModulesDir) > 0 {
+		qemuArgs = append(qemuArgs,
+			"-fsdev", fmt.Sprintf("local,id=kernel_modules_id,path=%s,security_model=none,readonly=on", rcnf.KernelModulesDir),
+			"-device", "virtio-9p-pci,fsdev=kernel_modules_id,mount_tag=kernel_modules",
+		)
+	}
+
 	return qemuArgs, nil
 }
 
