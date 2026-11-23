@@ -254,7 +254,15 @@ runs:
       if: ${{ inputs.provision == 'true' && steps.cache-lvh-image.outputs.cache-hit != 'true' && inputs.derive-dependency-list-sha != 'true' }}
       shell: bash
       run: |
-        lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"
+        n=1
+        until lvh images pull --platform linux/${{ inputs.arch}} --cache ${{ inputs.image-repo }}/${{ inputs.image }}:${{ inputs.image-version }} --dir "${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/"; do
+          if [ "$n" -ge 3 ]; then
+            exit 1
+          fi
+          echo "::warning::lvh images pull failed, retrying in $((n * 10)) s"
+          sleep $((n * 10))
+          n=$((n+1))
+        done
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}/ -type f -exec sudo chmod 666 {} +
         find ${{ inputs.images-folder-parent }}/images/${{ inputs.arch }}
     - name: Resize VM image
