@@ -34,6 +34,11 @@ type RunConf struct {
 
 	HostMount string
 
+	// KernelModulesDir is a host directory of kernel modules to expose to
+	// the guest, for use with a custom --kernel whose modules are not
+	// present in the VM image.
+	KernelModulesDir string
+
 	SerialPort int
 
 	CPU int
